@@ -15,8 +15,8 @@
   button.gray { background: #3b3f4a; }
   #progress { height: 8px; background: #23262f; border-radius: 4px; overflow: hidden; margin: 12px 0; display: none; }
   #progress > div { height: 100%; width: 0; background: #22c55e; transition: width .2s; }
-  #status { color: #9ca3af; font-size: 13px; white-space: pre-wrap; }
-  #error { display: none; background: #3b1116; border: 1px solid #7f1d1d; color: #fca5a5; border-radius: 8px; padding: 12px; font-size: 13px; margin: 12px 0; }
+  #status { color: #9ca3af; font-size: 13px; }
+  #error { display: none; background: #3b1116; border: 1px solid #7f1d1d; color: #fca5a5; border-radius: 8px; padding: 12px; font-size: 13px; margin: 12px 0; white-space: pre-wrap; }
   input { width: 100%; padding: 8px 10px; border-radius: 8px; border: 1px solid #2c3038; background: #171a21; color: #e6e8ef; margin: 8px 0 14px; box-sizing: border-box; }
   table { width: 100%; border-collapse: collapse; font-size: 13px; }
   th, td { text-align: left; padding: 6px 8px; border-bottom: 1px solid #23262f; }
@@ -29,16 +29,16 @@
 <div class="wrap">
   <h1>MLBB Skin Downloader</h1>
   <div class="bar">
-    <button id="btnJson" class="gray" disabled>⬇ Download JSON</button>
-    <button id="btnZip" disabled>⬇ Download All as ZIP</button>
-    <button id="btnReload" class="gray">↻ Reload</button>
+    <button id="btnJson" class="gray" disabled>Download JSON</button>
+    <button id="btnZip" disabled>Download All as ZIP</button>
+    <button id="btnReload" class="gray">Reload</button>
   </div>
   <div id="progress"><div></div></div>
   <div id="error"></div>
   <div id="status">Loading…</div>
   <input id="search" type="search" placeholder="Filter skins…" />
   <table>
-    <thead><tr><th></th><th>Name</th><th>Download</th></tr></thead>
+    <thead><tr><th></th><th>Name</th><th>File</th></tr></thead>
     <tbody id="rows"></tbody>
   </table>
 </div>
@@ -58,33 +58,20 @@ async function load() {
   $('error').style.display = 'none';
   $('status').textContent = 'Loading skin manifest…';
 
-  // 1) Static skins.json — instant, no serverless
-  try {
-    const t0 = performance.now();
-    const r = await fetch('/skins.json', { signal: AbortSignal.timeout(5000) });
-    if (r.ok) {
-      const data = await r.json();
-      if (Array.isArray(data.skins)) { apply(data); return; }
-    }
-  } catch (e) {
-    console.log('Static manifest unavailable:', e.message);
-  }
-
-  // 2) Fallback: live scrape endpoint (15s cap)
   try {
     const r = await fetch('/api/skins', { signal: AbortSignal.timeout(15000) });
     const data = await r.json();
     if (data.error) throw new Error(data.error);
     apply(data);
   } catch (e) {
-    showError('Manifest failed to load: ' + e.message + '\n→ Test ' + location.origin + '/api/skins directly in your browser.\n→ Or run: node scripts/build-manifest.js, commit public/skins.json, redeploy.');
-    $('status').textContent = 'Failed after ~15s.';
+    showError('Manifest failed: ' + e.message + '\nTest this URL in your browser: ' + location.origin + '/api/skins');
+    $('status').textContent = 'Failed after 15s.';
   }
 }
 
 function apply(data) {
   SKINS = data.skins;
-  $('status').textContent = `${data.count} skins loaded · ${data.generatedAt || ''}`;
+  $('status').textContent = data.count + ' skins loaded';
   render();
   $('btnJson').disabled = $('btnZip').disabled = false;
 }
@@ -92,12 +79,11 @@ function apply(data) {
 function render() {
   const q = $('search').value.toLowerCase();
   const rows = SKINS.filter((s) => s.name.toLowerCase().includes(q));
-  $('rows').innerHTML = rows.map((s) => `
-    <tr>
-      <td><img src="/api/image?url=${encodeURIComponent(s.url)}" loading="lazy" alt="" /></td>
-      <td>${s.name}</td>
-      <td><a href="/api/image?url=${encodeURIComponent(s.url)}" download="${s.file}">${s.file}</a></td>
-    </tr>`).join('');
+  $('rows').innerHTML = rows.map((s) =>
+    '<tr><td><img src="/api/image?url=' + encodeURIComponent(s.url) + '" loading="lazy" alt="" /></td>' +
+    '<td>' + s.name + '</td>' +
+    '<td><a href="/api/image?url=' + encodeURIComponent(s.url) + '" download="' + s.file + '">' + s.file + '</a></td></tr>'
+  ).join('');
 }
 
 $('search').addEventListener('input', render);
@@ -122,7 +108,7 @@ $('btnZip').addEventListener('click', async () => {
   const total = SKINS.length;
   const update = () => {
     fill.style.width = ((done + failed) / total * 100) + '%';
-    $('status').textContent = `${done + failed}/${total} downloaded${failed ? ` (${failed} failed)` : ''}`;
+    $('status').textContent = (done + failed) + '/' + total + ' downloaded' + (failed ? ' (' + failed + ' failed)' : '');
   };
 
   const pool = async (items, limit, fn) => {
@@ -154,7 +140,7 @@ $('btnZip').addEventListener('click', async () => {
   a.click();
   URL.revokeObjectURL(a.href);
 
-  $('status').textContent = `Done. ${done} saved, ${failed} failed.`;
+  $('status').textContent = 'Done. ' + done + ' saved, ' + failed + ' failed.';
   $('btnZip').disabled = false;
   setTimeout(() => (bar.style.display = 'none'), 800);
 });
