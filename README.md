@@ -1,95 +1,72 @@
-🚀 Along Collage Maker
+# 📸 ALONG Collage Maker
 
-Banner Version License
+> A sleek, high-performance web tool built for the gaming community to scan rosters, manage skin libraries, and generate high-quality profile collages.
 
-Along Collage Maker is a high-performance web application designed for Mobile
-Legends: Bang Bang players to create stunning, HD-quality skin showcases.
-Featuring a smart roster scanner, a dynamic library, and a drag-and-drop editor.
+Perfect for players, esports teams, and gaming storefronts looking to showcase their premium collections (Legend, Collector, Zenith, Epic, etc.) with a highly customizable, drag-and-drop interface.
 
-Live Demo ➔ (https://collage-20.vercel.app/)
+---
 
-🌟 Key Features
+## ✨ Best Points & Core Features
 
-  - 📸 Smart Roster Scanner: Upload your in-game screenshots, and the tool
-    identifies your skins automatically.
-  - 🎨 HD Collage Builder: Create seamless grids (up to 12 columns) with zero
-    quality loss.
-  - 🖼️ Profile Integration: Add your in-game profile banner at the top of your
-    collage for a personalized touch.
-  - 💎 Rarity Color Coding: Skins are automatically tagged and styled by rarity
-    (Legend, Collector, Zenith, Starlight, etc.).
-  - 🖱️ Drag-and-Drop: Reorder your skins easily using an intuitive visual
-    interface.
-  - 💾 State Persistence: Your selections and scans are saved locally, so you
-    don’t lose progress on refresh.
+* **🔍 Smart Roster Scanner:** Upload a screenshot of your in-game roster. The app simulates a scan to quickly mark detected items in your library.
+* **📚 Extensive Skin Library:** Search and filter through a dynamic database hosted directly on GitHub. Items are automatically color-coded by rarity (Legend, Collector, Starlight, etc.).
+* **🛠️ Drag & Drop Collage Builder:** Effortlessly organize your collage. Sort skins, add a custom profile banner, and adjust the grid layout (4 to 12 columns) in real-time.
+* **💾 Persistent State:** Accidentally refreshed? No problem. Your selected and owned items are saved locally in the browser so you never lose your work.
+* **📸 HD Export:** Powered by `html2canvas`, export your final seamless or spaced collage as a high-quality image ready for social media or storefront promos.
+* **📱 Fully Responsive:** A premium glassmorphism UI that works flawlessly on both desktop and mobile devices.
 
-📸 Preview
+---
 
-| 1\. Scan & Detect                                                           | 2\. Library Selection                                                        | 3\. HD Customization                                                         |
-| :-------------------------------------------------------------------------: | :--------------------------------------------------------------------------: | :--------------------------------------------------------------------------: |
-| ![Scan Example](https://via.placeholder.com/300x200?text=Scanner+Interface) | ![Library Example](https://via.placeholder.com/300x200?text=Skin+Library+UI) | ![Export Example](https://via.placeholder.com/300x200?text=Final+HD+Collage) |
+## 🚀 How to Use
 
-🛠️ How To Use
+Using the ALONG Collage Maker is broken down into three simple steps:
 
-Follow these simple steps to create your professional skin showcase:
+### Step 1: Scan Your Account
 
-Step 1: Scan Your Account
+Navigate to the **Scan Account** tab. Drag and drop (or tap to upload) a screenshot of your hero roster. The tool will "scan" your image and automatically detect the items you own.
 
-Navigate to the Scan Account tab. Upload a screenshot of your hero roster. The
-AI-simulated scanner will detect visible skins and mark them as "Owned" in your
-library.
+### Step 2: Browse the Skin Library
 
-Step 2: Choose Your Skins
+Move to the **Skin Library** tab. Here you can search by hero name or item tag (e.g., "Gusion" or "Collector").
 
-Go to the Skin Library. You can search for specific heroes or filter by skin
-names. Tap on any skin to select it.
+* Tap any card to add it to your collage selection.
+* Selected items are highlighted with a glowing border and a checkmark.
 
-Tip: You can select skins manually even if you didn't use the scanner!
+### Step 3: Build & Export Your Collage
 
-Step 3: Design the Layout
+Head over to the **Build Collage** tab to finalize your design.
 
-In the Build Collage tab:
+1. **Upload a Profile Banner:** Add your profile header to sit at the top of the collage.
+2. **Adjust Layout:** Choose your column count and tweak the grid spacing (set gap to `0px` for a seamless look).
+3. **Sort:** Click and drag the images to reorder them exactly how you want.
+4. **Export:** Hit **Export High-Q Image** to download your final masterpiece.
 
-  - Upload Profile: Add a screenshot of your game profile to act as a header.
-  - Adjust Columns: Choose between 4 to 12 columns for your grid.
-  - Spacing: Adjust the "Grid Spacing" slider for a seamless or framed look.
-  - Reorder: Drag and drop images to arrange them exactly how you want.
+---
 
-Step 4: Export in HD
+## 💻 Tech Stack
 
-Click the Export High-Q Image button. The app will render a high-definition PNG
-file (4x scale) directly to your device.
+This project is built to be lightweight and fast, requiring no heavy backend infrastructure:
 
-💡 Best Practices for Best Results
+* **Frontend:** HTML5, CSS3 (Custom Glassmorphism UI), Vanilla JavaScript
+* **Libraries:**
+* [html2canvas](https://html2canvas.hertzen.com/) (For HD image rendering)
+* [SortableJS](https://sortablejs.github.io/Sortable/) (For smooth drag-and-drop functionality)
 
-  - For the Scanner: Use clear, high-brightness screenshots from the in-game
-    Hero Roster page.
-  - For the Header: Crop your profile screenshot to focus on the name and level
-    for a cleaner banner look.
-  - For Exporting: Use 12 Columns (Seamless) for the most professional
-    "full-grid" aesthetic often used by top collectors.
-  - Browser: Works best on Chrome, Safari, and high-end mobile browsers.
 
-🛠️ Built With
+* **Database Engine:** GitHub API (Fetches image directories dynamically from the `alongbots/Collage` repository).
+* **Fonts:** Orbitron & Poppins (Google Fonts)
 
-  - HTML5/CSS3: Glassmorphism UI and Responsive Grid Layout.
-  - Vanilla JavaScript: Core logic and state management.
-  - Sortable.js: For the smooth drag-and-drop experience.
-  - html2canvas: For high-definition image rendering.
+---
 
-📂 Repository Structure
+## 🛠️ Installation & Setup
 
-├── index.html          # Main application file (All-in-one)
-├── images/             # Folder containing skin assets (fetched via API)
-└── README.md           # Documentation
+Because this is a standalone HTML application, installation is incredibly simple:
 
-🤝 Contributing
+1. Clone or download this repository.
+2. Place your skin images in the `images/` folder on your GitHub repository (ensure they are named properly, e.g., `HeroName-SkinName-Epic.jpg`).
+3. Open `index.html` in any modern web browser.
+4. *Note: To ensure the GitHub API fetches correctly, ensure your repository is public or properly authenticated.*
 
-If you want to add more skins to the database:
+---
 
-1.  Fork the repository.
-2.  Add the skin image to the /images folder following the naming convention:
-    HeroName-SkinName-Rarity.png.
-3.  Create a Pull Request.
-
-Developed with ❤️ by AlongBots
+*Built by [Along Bots](https://www.google.com/search?q=https://github.com/alongbots) | Optimized for mobile and desktop.*
