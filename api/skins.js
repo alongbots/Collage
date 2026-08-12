@@ -1,5 +1,3 @@
-// Live-scrape fallback endpoint. Primary source is the static public/skins.json.
-
 const BASE = 'https://mlbbautocollage.vercel.app';
 const TIMEOUT_MS = 8000;
 
@@ -15,6 +13,7 @@ module.exports = async (req, res) => {
 
     const seen = new Set();
     const skins = [];
+
     for (const m of html.matchAll(/<img\b[^>]*>/gi)) {
       const tag = m[0];
       const alt = (tag.match(/alt="([^"]*)"/i) || [, ''])[1].trim();
@@ -30,11 +29,25 @@ module.exports = async (req, res) => {
       skins.push({ name, url, file });
     }
 
-    res.status(200).json({ count: skins.length, generatedAt: new Date().toISOString(), source: BASE, skins });
+    const seenFiles = new Map();
+    for (const s of skins) {
+      const n = seenFiles.get(s.file) || 0;
+      seenFiles.set(s.file, n + 1);
+      if (n > 0) {
+        const dot = s.file.lastIndexOf('.');
+        s.file = s.file.slice(0, dot) + ' (' + (n + 1) + ')' + s.file.slice(dot);
+      }
+    }
+
+    res.status(200).json({
+      count: skins.length,
+      generatedAt: new Date().toISOString(),
+      source: BASE,
+      skins,
+    });
   } catch (err) {
     res.status(500).json({
       error: err.name === 'TimeoutError' ? 'Upstream fetch timed out (8s)' : err.message,
-      hint: 'Run scripts/build-manifest.js and commit public/skins.json for a static fallback.',
     });
   }
 };
