@@ -4,17 +4,18 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MLBB Skin Inventory</title>
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
     <style>
         :root {
             --bg: #05070a;
-            --panel: #11141d;
-            --accent: #00d2ff;
+            --card-bg: #11141d;
             --legend: #ffcc00;
-            --epic: #cc44ff;
-            --collector: #00fff2;
-            --elite: #3399ff;
-            --special: #ff8800;
+            --collector: #00f2ff;
+            --epic: #d644ff;
+            --special: #ff8c00;
+            --elite: #2196f3;
+            --starlight: #f48fb1;
+            --default: #ffffff;
         }
 
         body {
@@ -22,112 +23,88 @@
             color: white;
             font-family: 'Poppins', sans-serif;
             margin: 0;
-            padding: 0;
-            overflow-x: hidden;
+            padding: 20px;
+            background-image: radial-gradient(circle at top right, #1a1a2e, transparent);
         }
 
-        /* --- UI Header & Upload --- */
         header {
-            background: linear-gradient(to bottom, #161b22, transparent);
-            padding: 40px 20px;
             text-align: center;
-            border-bottom: 1px solid rgba(0, 210, 255, 0.2);
+            padding: 30px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            margin-bottom: 30px;
         }
 
         h1 {
             font-family: 'Orbitron', sans-serif;
-            font-size: 2.5rem;
-            letter-spacing: 4px;
-            margin: 0;
-            background: linear-gradient(90deg, #00d2ff, #9d00ff);
+            font-size: 2.2rem;
+            text-transform: uppercase;
+            letter-spacing: 5px;
+            background: linear-gradient(to right, #00d2ff, #9d00ff);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            text-transform: uppercase;
+            margin: 0;
         }
-
-        .upload-container {
-            margin-top: 20px;
-        }
-
-        #fileInput { display: none; }
-        .upload-btn {
-            background: rgba(0, 210, 255, 0.1);
-            border: 2px dashed var(--accent);
-            color: var(--accent);
-            padding: 15px 30px;
-            border-radius: 10px;
-            cursor: pointer;
-            font-family: 'Orbitron', sans-serif;
-            transition: 0.3s;
-            display: inline-block;
-        }
-        .upload-btn:hover {
-            background: var(--accent);
-            color: black;
-            box-shadow: 0 0 20px var(--accent);
-        }
-
-        /* --- Layout --- */
-        .container { padding: 20px; }
 
         .category-row {
-            margin-bottom: 60px;
-            animation: fadeIn 0.8s ease-out;
-        }
-
-        .row-header {
-            display: flex;
-            align-items: center;
-            margin-bottom: 25px;
-            gap: 15px;
+            margin-bottom: 50px;
         }
 
         .row-title {
             font-family: 'Orbitron', sans-serif;
-            font-size: 1.4rem;
+            font-size: 1.3rem;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
             text-transform: uppercase;
             letter-spacing: 2px;
         }
 
-        .row-line {
-            flex-grow: 1;
+        .row-title::after {
+            content: "";
+            flex: 1;
             height: 2px;
-            background: linear-gradient(90deg, var(--accent), transparent);
+            background: linear-gradient(90deg, currentColor, transparent);
+            opacity: 0.3;
         }
 
-        /* --- Skin Grid --- */
         .skin-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-            gap: 25px;
+            grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+            gap: 20px;
         }
 
         .skin-card {
-            background: var(--panel);
+            background: var(--card-bg);
             border-radius: 12px;
             overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.03);
+            transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             position: relative;
-            transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            border: 1px solid rgba(255,255,255,0.05);
         }
 
         .skin-card:hover {
-            transform: scale(1.05) translateY(-10px);
-            box-shadow: 0 15px 30px rgba(0,0,0,0.8);
-            border-color: rgba(255,255,255,0.2);
+            transform: translateY(-10px);
+            border-color: rgba(255, 255, 255, 0.2);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.7);
         }
 
-        .img-box {
+        .img-wrap {
             width: 100%;
-            height: 250px;
+            height: 240px;
             overflow: hidden;
             background: #000;
         }
 
-        .img-box img {
+        .img-wrap img {
             width: 100%;
             height: 100%;
             object-fit: cover;
+            transition: 0.5s;
+        }
+
+        .skin-card:hover img {
+            transform: scale(1.1);
         }
 
         .skin-info {
@@ -141,138 +118,91 @@
         }
 
         .hero-name {
+            display: block;
             font-weight: 600;
-            font-size: 0.95rem;
+            font-size: 0.85rem;
             margin-bottom: 4px;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+            text-shadow: 0 2px 4px black;
         }
 
-        .tag-badge {
-            font-size: 0.65rem;
-            font-weight: bold;
+        .tag-label {
+            font-size: 0.6rem;
+            font-weight: 800;
             padding: 2px 8px;
-            border-radius: 4px;
+            border-radius: 3px;
             text-transform: uppercase;
-            background: rgba(255,255,255,0.15);
+            border: 1px solid;
+            background: rgba(0,0,0,0.5);
         }
 
-        /* --- Rarity Specifics --- */
-        .tag-legend { color: var(--legend); border: 1px solid var(--legend); }
-        .tag-epic { color: var(--epic); border: 1px solid var(--epic); }
-        .tag-collector { color: var(--collector); border: 1px solid var(--collector); }
-        .tag-elite { color: var(--elite); border: 1px solid var(--elite); }
-        .tag-special { color: var(--special); border: 1px solid var(--special); }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .empty-state {
-            text-align: center;
-            margin-top: 100px;
-            opacity: 0.5;
-        }
+        /* Color Coding */
+        .Legend { color: var(--legend); }
+        .Collector { color: var(--collector); }
+        .Epic { color: var(--epic); }
+        .Special { color: var(--special); }
+        .Elite { color: var(--elite); }
+        .Starlight { color: var(--starlight); }
+        .Normal { color: var(--default); }
     </style>
 </head>
 <body>
 
     <header>
-        <h1>MLBB Skin Gallery</h1>
-        <div class="upload-container">
-            <label for="fileInput" class="upload-btn">
-                + UPLOAD SKIN IMAGES
-            </label>
-            <input type="file" id="fileInput" multiple accept="image/*">
-            <p style="font-size: 0.8rem; color: #888; margin-top: 10px;">
-                Filenames must be like: <b>Legend_Fanny.jpg</b> or <b>Epic_Lancelot.png</b>
-            </p>
-        </div>
+        <h1>Skin Inventory</h1>
     </header>
 
-    <div class="container" id="mainContainer">
-        <div class="empty-state" id="emptyState">
-            <h2>No skins loaded</h2>
-            <p>Select your image files to categorize them.</p>
-        </div>
-    </div>
+    <div id="main-container"></div>
+
+    <!-- THIS LOADS YOUR DATA -->
+    <script src="skin.js"></script>
 
     <script>
-        const fileInput = document.getElementById('fileInput');
-        const mainContainer = document.getElementById('mainContainer');
-        const emptyState = document.getElementById('emptyState');
+        const container = document.getElementById('main-container');
+        const groups = {};
 
-        fileInput.addEventListener('change', function(e) {
-            const files = Array.from(e.target.files);
-            if (files.length === 0) return;
+        // 1. Organize images from skin.js into groups
+        images.forEach(file => {
+            const parts = file.split('_');
+            const tag = parts[0] || "Normal";
+            let name = parts[1] ? parts[1].split('.')[0] : "Hero";
+            name = name.replace(/-/g, ' '); 
 
-            emptyState.style.display = 'none';
-            mainContainer.innerHTML = ''; // Clear previous
+            if (!groups[tag]) groups[tag] = [];
+            groups[tag].push({ file, name, tag });
+        });
 
-            // Grouping logic
-            const groups = {};
+        // 2. Define row order
+        const priority = ['Legend', 'Collector', 'Epic', 'Special', 'Elite', 'Starlight'];
+        const sortedTags = Object.keys(groups).sort((a, b) => {
+            let idxA = priority.indexOf(a);
+            let idxB = priority.indexOf(b);
+            return (idxA === -1 ? 99 : idxA) - (idxB === -1 ? 99 : idxB);
+        });
 
-            files.forEach(file => {
-                const fileName = file.name; // e.g. Legend_Fanny.jpg
-                const parts = fileName.split('_');
-                
-                let tag = "Normal";
-                let hero = fileName;
+        // 3. Build the UI
+        sortedTags.forEach(tag => {
+            const section = document.createElement('div');
+            section.className = 'category-row';
+            
+            section.innerHTML = `
+                <div class="row-title ${tag}">${tag} Skins</div>
+                <div class="skin-grid" id="grid-${tag}"></div>
+            `;
+            container.appendChild(section);
 
-                if (parts.length > 1) {
-                    tag = parts[0].charAt(0).toUpperCase() + parts[0].slice(1).toLowerCase();
-                    hero = parts[1].split('.')[0].replace(/-/g, ' ');
-                }
-
-                if (!groups[tag]) groups[tag] = [];
-                
-                groups[tag].push({
-                    url: URL.createObjectURL(file),
-                    hero: hero,
-                    tag: tag
-                });
-            });
-
-            // Render Rows
-            // Priority for row order
-            const priority = ['Legend', 'Collector', 'Zenith', 'Epic', 'Special', 'Elite', 'Starlight', 'Normal'];
-            const sortedTags = Object.keys(groups).sort((a, b) => {
-                let indexA = priority.indexOf(a);
-                let indexB = priority.indexOf(b);
-                return (indexA === -1 ? 99 : indexA) - (indexB === -1 ? 99 : indexB);
-            });
-
-            sortedTags.forEach(tag => {
-                const section = document.createElement('section');
-                section.className = 'category-row';
-                
-                const tagClass = `tag-${tag.toLowerCase()}`;
-                
-                section.innerHTML = `
-                    <div class="row-header">
-                        <div class="row-title" style="color: var(--${tag.toLowerCase()}, #fff)">${tag} Skins</div>
-                        <div class="row-line" style="background: linear-gradient(90deg, var(--${tag.toLowerCase()}, var(--accent)), transparent)"></div>
-                    </div>
-                    <div class="skin-grid" id="grid-${tag}"></div>
-                `;
-
-                mainContainer.appendChild(section);
-                const grid = document.getElementById(`grid-${tag}`);
-
-                groups[tag].forEach(skin => {
-                    const card = document.createElement('div');
-                    card.className = 'skin-card';
-                    card.innerHTML = `
-                        <div class="img-box">
-                            <img src="${skin.url}" alt="${skin.hero}">
+            const grid = document.getElementById(`grid-${tag}`);
+            groups[tag].forEach(item => {
+                grid.innerHTML += `
+                    <div class="skin-card">
+                        <div class="img-wrap">
+                            <img src="images/${item.file}" alt="${item.name}" loading="lazy">
                         </div>
                         <div class="skin-info">
-                            <div class="hero-name">${skin.hero}</div>
-                            <span class="tag-badge ${tagClass}">${skin.tag}</span>
+                            <span class="hero-name">${item.name}</span>
+                            <span class="tag-label ${tag}">${item.tag}</span>
                         </div>
-                    `;
-                    grid.appendChild(card);
-                });
+                    </div>
+                `;
             });
         });
     </script>
