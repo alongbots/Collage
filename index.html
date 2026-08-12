@@ -205,7 +205,7 @@
             border: 2px solid transparent;
             cursor: pointer;
         }
-        .skin-card .img-box { width: 100%; aspect-ratio: 3/4; background: #111; }
+        .skin-card .img-box { width: 100%; aspect-ratio: 1/1; background: #111; }
         .skin-card img { width: 100%; height: 100%; object-fit: cover; transition: 0.3s; }
         .skin-card:hover img { transform: scale(1.05); }
         
@@ -259,39 +259,44 @@
         
         #collage-wrapper {
             background: #000;
-            padding: 20px;
+            padding: 0px; /* Zero padding for seamless look */
             position: relative;
             min-width: 300px;
+            width: 100%;
+            max-width: 1000px;
             box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+            display: flex;
+            flex-direction: column;
+        }
+
+        #profile-header-container {
+            width: 100%;
+            display: none; /* Hidden until image is uploaded */
+        }
+        
+        #profile-header-container img {
+            width: 100%;
+            display: block; /* Removes bottom spacing bug on images */
+            object-fit: cover;
         }
 
         #collage-grid {
             display: grid;
-            gap: 5px;
+            gap: 0px; /* Seamless gap */
             transition: 0.3s;
+            width: 100%;
         }
 
         .collage-item { width: 100%; aspect-ratio: 1/1; overflow: hidden; cursor: grab; position: relative; }
-        .collage-item img { width: 100%; height: 100%; object-fit: cover; pointer-events: none; }
+        .collage-item img { width: 100%; height: 100%; object-fit: cover; display: block; pointer-events: none; }
         
         .remove-btn {
             position: absolute; top: 5px; right: 5px; background: red; color: white;
             width: 20px; height: 20px; border-radius: 50%; font-size: 12px;
             display: flex; align-items: center; justify-content: center;
-            cursor: pointer; opacity: 0; transition: 0.2s; border: none;
+            cursor: pointer; opacity: 0; transition: 0.2s; border: none; z-index: 10;
         }
         .collage-item:hover .remove-btn { opacity: 1; }
-
-        .collage-text-overlay {
-            position: absolute;
-            bottom: 20px; left: 0; width: 100%;
-            text-align: center;
-            font-family: 'Orbitron', sans-serif;
-            color: white;
-            text-transform: uppercase;
-            text-shadow: 0 4px 8px rgba(0,0,0,0.8);
-            pointer-events: none;
-        }
 
         #status-msg { text-align: center; padding: 20px; color: var(--text-muted); }
     </style>
@@ -314,7 +319,7 @@
             <div class="glass" style="padding: 20px;">
                 <h2 style="margin-bottom: 15px; font-family: 'Orbitron';">Smart Roster Scanner</h2>
                 <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 20px;">
-                    Upload a screenshot of your hero roster (e.g., <strong>IMG-20260812-WA0032.jpg</strong>). The scanner will detect visible skins and mark them in your library.
+                    Upload a screenshot of your hero roster. The scanner will detect visible skins and mark them in your library.
                 </p>
                 
                 <input type="file" id="file-upload" accept="image/*" style="display: none;">
@@ -363,49 +368,40 @@
                     <h3 style="font-family: 'Orbitron'; margin-bottom: 15px;">Layout Settings</h3>
                     
                     <div class="control-group">
-                        <label>Columns</label>
+                        <label style="color: var(--accent-1); font-weight: bold;">1. Profile Banner (Top Image)</label>
+                        <input type="file" id="header-upload" accept="image/*" style="display: none;" onchange="loadHeaderImage(event)">
+                        <button class="btn btn-outline" style="width: 100%; font-size: 0.8rem;" onclick="document.getElementById('header-upload').click()">Upload Profile Screenshot</button>
+                        <button id="remove-header-btn" class="btn btn-outline" style="width: 100%; font-size: 0.8rem; margin-top: 10px; display: none; border-color: red; color: red;" onclick="removeHeaderImage()">Remove Profile Banner</button>
+                    </div>
+
+                    <div class="control-group" style="margin-top: 15px;">
+                        <label>2. Grid Columns</label>
                         <select id="ctrl-columns" onchange="updateCollage()">
-                            <option value="2">2 Columns</option>
-                            <option value="3">3 Columns</option>
-                            <option value="4" selected>4 Columns</option>
-                            <option value="5">5 Columns</option>
+                            <option value="4">4 Columns</option>
                             <option value="6">6 Columns</option>
+                            <option value="8">8 Columns</option>
+                            <option value="10">10 Columns</option>
+                            <option value="12" selected>12 Columns (Like Reference)</option>
                         </select>
                     </div>
 
                     <div class="control-group">
-                        <label>Grid Spacing (px)</label>
-                        <input type="range" id="ctrl-gap" min="0" max="20" value="5" oninput="updateCollage()">
+                        <label>3. Grid Spacing (px)</label>
+                        <input type="range" id="ctrl-gap" min="0" max="10" value="0" oninput="updateCollage()">
+                        <span id="gap-val" style="font-size: 0.8rem; color: var(--text-muted);">0px (Seamless)</span>
                     </div>
 
-                    <div class="control-group">
-                        <label>Background Color</label>
-                        <input type="color" id="ctrl-bg" value="#000000" oninput="updateCollage()">
-                    </div>
-
-                    <h3 style="font-family: 'Orbitron'; margin: 20px 0 15px;">Overlay Text</h3>
-                    
-                    <div class="control-group">
-                        <label>Main Title</label>
-                        <input type="text" id="ctrl-title" value="Kaguya Store & Rynn Official" oninput="updateCollage()">
-                    </div>
-                    
-                    <div class="control-group">
-                        <label>Subtitle / Event</label>
-                        <input type="text" id="ctrl-subtitle" value="TANI CUP SHOWCASE" oninput="updateCollage()">
-                    </div>
-
-                    <button class="btn" style="margin-top: 20px;" onclick="exportCollage()">Export High-Q Image</button>
+                    <button class="btn" style="margin-top: 20px; width: 100%;" onclick="exportCollage()">Export High-Q Image</button>
                 </div>
 
                 <!-- Canvas Area -->
                 <div class="canvas-panel">
+                    <!-- The exact layout requested: Top Image + Seamless Grid -->
                     <div id="collage-wrapper">
-                        <div id="collage-grid"></div>
-                        <div class="collage-text-overlay">
-                            <h2 id="render-title" style="letter-spacing: 2px;">Kaguya Store & Rynn Official</h2>
-                            <p id="render-subtitle" style="font-size: 0.9rem; opacity: 0.8; font-family: 'Poppins';">TANI CUP SHOWCASE</p>
+                        <div id="profile-header-container">
+                            <img id="profile-header-img" src="" alt="Profile Header">
                         </div>
+                        <div id="collage-grid"></div>
                     </div>
                 </div>
 
@@ -438,7 +434,6 @@
                 
                 files.forEach(file => {
                     if (file.name.match(/\.(jpg|jpeg|png|webp|gif)$/i)) {
-                        // Parse filename: Legend_Gusion.jpg or Normal_HeroName_SkinName.jpg
                         const parts = file.name.split('_');
                         const tag = parts[0] || "Basic";
                         let hero = parts[1] ? parts[1].split('.')[0].replace(/-/g, ' ') : "Unknown Hero";
@@ -492,11 +487,9 @@
             document.getElementById('btn-scan').style.display = 'none';
             document.getElementById('scan-loader').style.display = 'block';
             
-            // Simulate processing time
             setTimeout(() => {
                 document.getElementById('scan-loader').style.display = 'none';
                 
-                // Randomly assign 10-25 skins as "Owned/Detected" to simulate image recognition
                 ownedSkins.clear();
                 let detectCount = Math.floor(Math.random() * 15) + 10;
                 let shuffled = [...skinDatabase].sort(() => 0.5 - Math.random());
@@ -508,12 +501,11 @@
                 result.innerHTML = `✓ Detected ${ownedSkins.size} skins successfully.<br><button class="btn btn-sm" style="margin-top:10px;" onclick="navTo('library')">Review Library</button>`;
                 result.style.display = 'block';
                 
-                // Re-render library to show detection tags
                 filterSkins();
             }, 2500);
         }
 
-        // --- LIBRARY RENDERING & FILTERING ---
+        // --- LIBRARY RENDERING ---
         function renderLibrary(skins) {
             const container = document.getElementById('library-container');
             container.innerHTML = '';
@@ -521,13 +513,11 @@
 
             const priority = ['Legend', 'Collector', 'Zenith', 'Epic', 'Special', 'Elite', 'Starlight', 'Basic'];
 
-            // Grouping
             skins.forEach(skin => {
                 if (!currentGroupedSkins[skin.tag]) currentGroupedSkins[skin.tag] = [];
                 currentGroupedSkins[skin.tag].push(skin);
             });
 
-            // Sorting Categories
             const sortedTags = Object.keys(currentGroupedSkins).sort((a, b) => {
                 let idxA = priority.indexOf(a); let idxB = priority.indexOf(b);
                 return (idxA === -1 ? 99 : idxA) - (idxB === -1 ? 99 : idxB);
@@ -599,6 +589,30 @@
         }
 
         // --- COLLAGE BUILDER ---
+        
+        // Load the top profile banner image
+        function loadHeaderImage(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const img = document.getElementById('profile-header-img');
+                    img.src = e.target.result;
+                    document.getElementById('profile-header-container').style.display = 'block';
+                    document.getElementById('remove-header-btn').style.display = 'inline-block';
+                }
+                reader.readAsDataURL(file);
+            }
+        }
+
+        // Remove the top profile banner image
+        function removeHeaderImage() {
+            document.getElementById('profile-header-img').src = '';
+            document.getElementById('profile-header-container').style.display = 'none';
+            document.getElementById('remove-header-btn').style.display = 'none';
+            document.getElementById('header-upload').value = ""; // Reset input
+        }
+
         function renderCollageEditor() {
             const grid = document.getElementById('collage-grid');
             grid.innerHTML = '';
@@ -608,7 +622,6 @@
                 return;
             }
 
-            // Get full skin objects for selected IDs
             const selectedData = skinDatabase.filter(s => selectedSkins.has(s.id));
 
             selectedData.forEach(skin => {
@@ -624,7 +637,6 @@
 
             updateCollage();
 
-            // Initialize Drag & Drop
             new Sortable(grid, {
                 animation: 150,
                 ghostClass: 'sortable-ghost'
@@ -636,7 +648,6 @@
             updateCounter();
             renderCollageEditor();
             
-            // Also unselect in library view
             const safeId = `card-${id.replace(/\./g, '-')}`;
             const card = document.getElementById(safeId);
             if(card) card.classList.remove('selected');
@@ -644,22 +655,16 @@
 
         function updateCollage() {
             const grid = document.getElementById('collage-grid');
-            const wrapper = document.getElementById('collage-wrapper');
             
             const cols = document.getElementById('ctrl-columns').value;
             const gap = document.getElementById('ctrl-gap').value;
-            const bg = document.getElementById('ctrl-bg').value;
             
-            const title = document.getElementById('ctrl-title').value;
-            const subtitle = document.getElementById('ctrl-subtitle').value;
+            // Update UI label for gap
+            document.getElementById('gap-val').innerText = gap == 0 ? "0px (Seamless)" : gap + "px";
 
+            // Apply grid styles for the seamless look
             grid.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
             grid.style.gap = `${gap}px`;
-            wrapper.style.backgroundColor = bg;
-            wrapper.style.padding = `${parseInt(gap) + 15}px`;
-
-            document.getElementById('render-title').innerText = title;
-            document.getElementById('render-subtitle').innerText = subtitle;
         }
 
         // --- EXPORT ---
@@ -668,22 +673,20 @@
             const btn = event.target;
             const originalText = btn.innerText;
             
-            // Hide remove buttons before export
             document.querySelectorAll('.remove-btn').forEach(btn => btn.style.display = 'none');
             btn.innerText = "Rendering...";
             
             html2canvas(wrapper, {
                 useCORS: true,
                 allowTaint: true,
-                scale: 3, // High-Q standard export
-                backgroundColor: null // Inherit from wrapper
+                scale: 3, 
+                backgroundColor: "#000000"
             }).then(canvas => {
                 const link = document.createElement('a');
-                link.download = `MLBB_Collage_${Date.now()}.png`;
+                link.download = `Store_Showcase_${Date.now()}.png`;
                 link.href = canvas.toDataURL('image/png', 1.0);
                 link.click();
                 
-                // Restore buttons
                 document.querySelectorAll('.remove-btn').forEach(btn => btn.style.display = 'flex');
                 btn.innerText = originalText;
             }).catch(err => {
