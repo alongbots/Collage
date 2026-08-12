@@ -3,298 +3,463 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MLBB Studio | Premium Collage Maker</title>
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700&family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
-    <!-- Libraries for Export and Drag-Drop -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
+    <title>MLBB Skin Collage Pro</title>
     
+    <!-- Libraries -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html-to-image/1.11.11/html-to-image.min.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700&family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+
     <style>
+        [x-cloak] { display: none !important; }
         :root {
-            --bg: #0b0a1a;
-            --surface: #16122b;
-            --accent: #7d5fff;
-            --accent-glow: rgba(125, 95, 255, 0.4);
-            --border: rgba(255, 255, 255, 0.1);
-            --glass: rgba(255, 255, 255, 0.03);
-            --text: #ffffff;
-            --text-dim: #a0a4cb;
+            --ml-bg: #05070a;
+            --ml-panel: #11141d;
+            --ml-accent: #00d2ff;
         }
-
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { 
-            background: var(--bg); 
-            color: var(--text); 
-            font-family: 'Poppins', sans-serif; 
-            background-image: radial-gradient(circle at 0% 0%, #1a1535 0%, transparent 50%),
-                              radial-gradient(circle at 100% 100%, #110d24 0%, transparent 50%);
+        body {
+            background-color: var(--ml-bg);
+            color: #e2e8f0;
+            font-family: 'Poppins', sans-serif;
+            overflow-x: hidden;
         }
-
-        /* --- LAYOUT --- */
-        .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+        .font-orbitron { font-family: 'Orbitron', sans-serif; }
         
-        header { text-align: center; padding: 40px 0; }
-        .logo { font-family: 'Orbitron', sans-serif; font-size: 2rem; color: var(--accent); letter-spacing: 4px; text-transform: uppercase; text-shadow: 0 0 20px var(--accent-glow); }
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #05070a; }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
 
-        /* --- DISPLAY BOXES --- */
-        .workspace {
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-            margin-bottom: 40px;
-            background: var(--glass);
-            padding: 25px;
-            border-radius: 24px;
-            border: 1px solid var(--border);
-            backdrop-filter: blur(10px);
-        }
-
-        .upload-box {
-            width: 100%;
-            height: 250px;
-            border: 2px dashed var(--border);
-            border-radius: 15px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            position: relative;
-            cursor: pointer;
-            overflow: hidden;
-            background: rgba(0,0,0,0.2);
-            transition: 0.3s;
-        }
-        .upload-box:hover { border-color: var(--accent); background: rgba(125, 95, 255, 0.05); }
-        .upload-box img { width: 100%; height: 100%; object-fit: contain; z-index: 2; position: relative; }
-        .box-label { position: absolute; text-align: center; color: var(--text-dim); font-size: 0.9rem; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; }
-
-        .collage-box {
-            width: 100%;
-            min-height: 300px;
-            background: #050505;
-            border-radius: 15px;
-            padding: 15px;
-            display: grid;
-            grid-template-columns: repeat(6, 1fr);
-            gap: 8px;
-            position: relative;
-        }
-
-        .collage-item { aspect-ratio: 1/1.4; border-radius: 4px; overflow: hidden; background: #111; }
-        .collage-item img { width: 100%; height: 100%; object-fit: cover; }
-
-        /* --- CONTROLS --- */
-        .controls {
-            display: flex;
-            gap: 15px;
-            margin-bottom: 30px;
-            flex-wrap: wrap;
-        }
-        #searchBar { flex: 1; background: var(--surface); border: 1px solid var(--border); padding: 15px; border-radius: 12px; color: white; outline: none; }
-        .btn-export { background: var(--accent); color: white; border: none; padding: 0 30px; border-radius: 12px; font-weight: 700; cursor: pointer; transition: 0.3s; }
-        .btn-export:hover { transform: scale(1.05); box-shadow: 0 0 20px var(--accent-glow); }
-
-        /* --- LIBRARY GRID --- */
-        .library-title { margin-bottom: 20px; font-family: 'Orbitron'; font-size: 1rem; color: var(--text-dim); }
-        .skin-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 15px; }
-
-        .skin-card {
-            background: var(--surface);
-            border-radius: 12px;
-            overflow: hidden;
-            border: 1px solid var(--border);
-            cursor: pointer;
-            transition: 0.3s;
-            position: relative;
-        }
-        .skin-card:hover { transform: translateY(-5px); border-color: var(--accent); }
-        .skin-card.selected { border: 2px solid var(--accent); }
-        .skin-card img { width: 100%; height: 180px; object-fit: cover; }
+        /* Rarity Gradients */
+        .rarity-legend { border-bottom: 3px solid #ffcc00; text-shadow: 0 0 10px #ffcc00; }
+        .rarity-collector { border-bottom: 3px solid #00f2ff; text-shadow: 0 0 10px #00f2ff; }
+        .rarity-epic { border-bottom: 3px solid #d644ff; text-shadow: 0 0 10px #d644ff; }
         
-        .skin-info {
-            padding: 8px;
-            background: linear-gradient(to top, rgba(0,0,0,0.9), transparent);
-            position: absolute;
-            bottom: 0; width: 100%;
-            text-align: center;
+        .glass-panel {
+            background: rgba(17, 20, 29, 0.8);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }
-        .hero-name { font-size: 0.75rem; font-weight: 600; display: block; }
-        .tag-badge { font-size: 0.6rem; text-transform: uppercase; color: var(--accent); font-weight: bold; }
 
-        #status { text-align: center; color: var(--accent); padding: 20px; }
-
-        @media (max-width: 768px) {
-            .collage-box { grid-template-columns: repeat(3, 1fr); }
+        /* Mobile Bottom Sheet Animation */
+        .bottom-sheet {
+            transition: transform 0.3s ease-out;
         }
     </style>
 </head>
-<body>
+<body x-data="app()" x-init="initData()">
 
-    <div class="container">
-        <header>
-            <div class="logo">MLBB Studio</div>
-        </header>
-
-        <!-- Final Product Display Area -->
-        <div class="workspace" id="capture-area">
-            <!-- Box 1: Account Screenshot -->
-            <div class="upload-box" onclick="document.getElementById('profileInput').click()">
-                <div class="box-label">MLBB Account Screenshot Goes Here<br><small>(Click to Upload)</small></div>
-                <img id="profilePreview" src="">
-                <input type="file" id="profileInput" hidden accept="image/*">
+    <!-- --- HEADER --- -->
+    <header class="sticky top-0 z-50 glass-panel px-4 py-3 flex justify-between items-center">
+        <div class="flex items-center gap-2">
+            <div class="w-8 h-8 bg-gradient-to-tr from-cyan-500 to-purple-600 rounded-lg flex items-center justify-center">
+                <i data-lucide="layers" class="w-5 h-5 text-white"></i>
             </div>
+            <h1 class="font-orbitron text-lg font-bold tracking-tighter">MLBB<span class="text-cyan-400">COLLAGE</span></h1>
+        </div>
+        <div class="flex gap-3">
+            <button @click="step = 'upload'" class="p-2 hover:bg-white/10 rounded-full transition">
+                <i data-lucide="upload" class="w-5 h-5"></i>
+            </button>
+            <button class="p-2 hover:bg-white/10 rounded-full transition">
+                <i data-lucide="settings" class="w-5 h-5"></i>
+            </button>
+        </div>
+    </header>
 
-            <!-- Box 2: Skin Collage Product -->
-            <div class="collage-box" id="collage-output">
-                <div class="box-label" id="collage-hint">MLBB Skin Collage Goes Here<br><small>(Select skins from library below)</small></div>
-                <!-- Selected Skins will inject here -->
+    <main class="pb-32 max-w-6xl mx-auto px-4 pt-6">
+
+        <!-- --- STEP 1: UPLOAD & SCAN --- -->
+        <template x-if="step === 'upload'">
+            <div class="space-y-6 animate-in fade-in duration-500">
+                <div class="text-center space-y-2">
+                    <h2 class="text-2xl font-bold">Account Screenshot</h2>
+                    <p class="text-slate-400 text-sm">Upload your skin gallery to auto-detect owned skins</p>
+                </div>
+
+                <div 
+                    @dragover.prevent="isDragging = true" 
+                    @dragleave.prevent="isDragging = false"
+                    @drop.prevent="handleDrop($event)"
+                    :class="isDragging ? 'border-cyan-500 bg-cyan-500/5' : 'border-slate-700'"
+                    class="border-2 border-dashed rounded-2xl p-10 text-center transition-all cursor-pointer relative overflow-hidden"
+                >
+                    <input type="file" @change="handleUpload($event)" class="absolute inset-0 opacity-0 cursor-pointer">
+                    <div x-show="!isScanning">
+                        <i data-lucide="image-plus" class="w-12 h-12 mx-auto mb-4 text-slate-500"></i>
+                        <p class="font-medium">Tap to upload or drag & drop</p>
+                        <p class="text-xs text-slate-500 mt-1">Supports PNG, JPG, WEBP</p>
+                    </div>
+
+                    <!-- Scanning Animation -->
+                    <div x-show="isScanning" class="space-y-4">
+                        <div class="relative w-20 h-20 mx-auto">
+                            <div class="absolute inset-0 border-4 border-cyan-500/20 rounded-full"></div>
+                            <div class="absolute inset-0 border-4 border-t-cyan-500 rounded-full animate-spin"></div>
+                        </div>
+                        <div class="space-y-1">
+                            <p class="text-cyan-400 font-bold animate-pulse" x-text="scanStatus"></p>
+                            <p class="text-xs text-slate-500 italic">Matching against local database...</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex justify-center">
+                    <button @click="step = 'library'" class="text-slate-400 text-sm underline">Skip to manual selection</button>
+                </div>
+            </div>
+        </template>
+
+        <!-- --- STEP 2: LIBRARY --- -->
+        <template x-if="step === 'library'">
+            <div class="space-y-6">
+                <!-- Search & Filters -->
+                <div class="sticky top-16 z-40 bg-ml-bg py-2 space-y-4">
+                    <div class="relative">
+                        <i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400"></i>
+                        <input 
+                            type="text" 
+                            x-model="searchQuery"
+                            placeholder="Search hero, skin, or tag..." 
+                            class="w-full bg-slate-900 border border-slate-700 rounded-xl py-3 pl-10 pr-4 focus:ring-2 focus:ring-cyan-500 outline-none"
+                        >
+                    </div>
+                    
+                    <!-- Quick Filters -->
+                    <div class="flex gap-2 overflow-x-auto pb-2 no-scrollbar">
+                        <template x-for="filter in filters" :key="filter">
+                            <button 
+                                @click="toggleFilter(filter)"
+                                :class="activeFilters.includes(filter) ? 'bg-cyan-500 text-black border-cyan-500' : 'bg-slate-800 border-slate-700 text-slate-300'"
+                                class="px-4 py-1.5 rounded-full text-xs font-bold border transition-colors whitespace-nowrap"
+                                x-text="filter"
+                            ></button>
+                        </template>
+                    </div>
+                </div>
+
+                <!-- Hero Sections -->
+                <div class="space-y-8">
+                    <template x-for="(skins, hero) in groupedSkins" :key="hero">
+                        <div x-show="skins.some(s => s.visible)">
+                            <h3 class="font-orbitron text-sm font-bold text-slate-400 mb-4 flex items-center gap-2">
+                                <span x-text="hero"></span>
+                                <span class="h-[1px] flex-1 bg-slate-800"></span>
+                            </h3>
+                            <div class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-3">
+                                <template x-for="skin in skins" :key="skin.id">
+                                    <div 
+                                        x-show="skin.visible"
+                                        @click="toggleSkin(skin)"
+                                        :class="skin.selected ? 'ring-2 ring-cyan-500 scale-95' : 'opacity-80'"
+                                        class="relative aspect-[3/4] rounded-lg overflow-hidden bg-slate-800 cursor-pointer transition-all group"
+                                    >
+                                        <img :src="skin.url" class="w-full h-full object-cover" loading="lazy">
+                                        
+                                        <!-- Overlay info -->
+                                        <div class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/90 p-1.5">
+                                            <p class="text-[10px] font-bold leading-tight truncate" x-text="skin.name"></p>
+                                            <div class="flex justify-between items-center mt-1">
+                                                <span :class="'rarity-' + skin.rarity.toLowerCase()" class="text-[8px] uppercase font-bold" x-text="skin.rarity"></span>
+                                                <template x-if="skin.owned">
+                                                    <i data-lucide="check-circle-2" class="w-3 h-3 text-green-400"></i>
+                                                </template>
+                                            </div>
+                                        </div>
+
+                                        <!-- Selection Indicator -->
+                                        <div x-show="skin.selected" class="absolute top-1 right-1 bg-cyan-500 rounded-full p-0.5">
+                                            <i data-lucide="check" class="w-3 h-3 text-black"></i>
+                                        </div>
+                                    </div>
+                                </template>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+            </div>
+        </template>
+
+        <!-- --- STEP 3: COLLAGE EDITOR --- -->
+        <template x-if="step === 'editor'">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 animate-in slide-in-from-right duration-500">
+                
+                <!-- Settings Panel (Left) -->
+                <div class="space-y-6 order-2 lg:order-1">
+                    <div class="glass-panel rounded-2xl p-6 space-y-6">
+                        <h3 class="font-orbitron font-bold text-cyan-400">Layout Settings</h3>
+                        
+                        <!-- Grid Controls -->
+                        <div class="space-y-4">
+                            <div>
+                                <label class="text-xs text-slate-400 block mb-2">Columns</label>
+                                <input type="range" x-model="editor.cols" min="2" max="8" class="w-full accent-cyan-500">
+                                <div class="flex justify-between text-[10px] mt-1"><span>2</span><span x-text="editor.cols"></span><span>8</span></div>
+                            </div>
+                            <div>
+                                <label class="text-xs text-slate-400 block mb-2">Spacing</label>
+                                <input type="range" x-model="editor.gap" min="0" max="40" class="w-full accent-cyan-500">
+                            </div>
+                            <div>
+                                <label class="text-xs text-slate-400 block mb-2">Border Radius</label>
+                                <input type="range" x-model="editor.rounded" min="0" max="30" class="w-full accent-cyan-500">
+                            </div>
+                        </div>
+
+                        <hr class="border-slate-800">
+
+                        <h3 class="font-orbitron font-bold text-cyan-400">Appearance</h3>
+                        <div class="grid grid-cols-2 gap-3">
+                            <button @click="editor.showText = !editor.showText" :class="editor.showText ? 'bg-cyan-500 text-black' : 'bg-slate-800'" class="py-2 rounded-lg text-xs font-bold transition">Names</button>
+                            <button @click="editor.showRarity = !editor.showRarity" :class="editor.showRarity ? 'bg-cyan-500 text-black' : 'bg-slate-800'" class="py-2 rounded-lg text-xs font-bold transition">Rarity Badge</button>
+                        </div>
+                        
+                        <div class="space-y-2">
+                            <label class="text-xs text-slate-400 block">Background Color</label>
+                            <input type="color" x-model="editor.bgColor" class="w-full h-10 bg-transparent border-none">
+                        </div>
+                    </div>
+
+                    <button @click="exportCollage" class="w-full bg-gradient-to-r from-cyan-500 to-blue-600 text-black font-bold py-4 rounded-2xl shadow-lg shadow-cyan-500/20 flex items-center justify-center gap-2">
+                        <i data-lucide="download" class="w-5 h-5"></i>
+                        EXPORT HIGH QUALITY
+                    </button>
+                </div>
+
+                <!-- Canvas Preview (Right) -->
+                <div class="lg:col-span-2 order-1 lg:order-2">
+                    <div id="collage-canvas" 
+                        :style="{ 
+                            backgroundColor: editor.bgColor,
+                            padding: editor.gap + 'px',
+                            display: 'grid',
+                            gridTemplateColumns: `repeat(${editor.cols}, 1fr)`,
+                            gap: editor.gap + 'px'
+                        }"
+                        class="rounded-lg overflow-hidden shadow-2xl"
+                    >
+                        <template x-for="skin in selectedSkins" :key="skin.id">
+                            <div class="relative group aspect-[3/4]" :style="{ borderRadius: editor.rounded + 'px', overflow: 'hidden' }">
+                                <img :src="skin.url" class="w-full h-full object-cover">
+                                
+                                <div x-show="editor.showText" class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black p-2">
+                                    <p class="text-[10px] font-bold truncate text-white" x-text="skin.hero"></p>
+                                    <p class="text-[8px] opacity-80 truncate text-white" x-text="skin.name"></p>
+                                </div>
+
+                                <div x-show="editor.showRarity" class="absolute top-2 left-2">
+                                    <span :class="'rarity-' + skin.rarity.toLowerCase()" class="text-[7px] px-1 bg-black/50 rounded border border-white/20 uppercase font-bold" x-text="skin.rarity"></span>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+                    <p class="text-center text-slate-500 text-xs mt-4">Long press to drag and reorder (Desktop Only)</p>
+                </div>
+            </div>
+        </template>
+
+    </main>
+
+    <!-- --- SELECTION BAR (Sticky Bottom) --- -->
+    <div x-show="selectedSkins.length > 0 && step === 'library'" 
+        class="fixed bottom-20 left-4 right-4 z-50 glass-panel p-4 rounded-2xl flex items-center justify-between shadow-2xl border-cyan-500/30 animate-in slide-in-from-bottom duration-300"
+    >
+        <div class="flex items-center gap-4">
+            <div class="bg-cyan-500 text-black w-10 h-10 rounded-full flex items-center justify-center font-bold" x-text="selectedSkins.length"></div>
+            <div>
+                <p class="font-bold text-sm">Skins Selected</p>
+                <button @click="clearSelection" class="text-xs text-red-400 hover:underline">Clear All</button>
             </div>
         </div>
-
-        <!-- Toolbar -->
-        <div class="controls">
-            <input type="text" id="searchBar" placeholder="Search Hero, Rarity (Legend, Collector, KOF)...">
-            <button class="btn-export" onclick="downloadProduct()">Export PNG</button>
-        </div>
-
-        <!-- Library Section -->
-        <div class="library-title">Skin Library</div>
-        <div id="status">Connecting to GitHub Repo...</div>
-        <div class="skin-grid" id="skinGrid"></div>
+        <button @click="step = 'editor'" class="bg-white text-black px-6 py-2 rounded-xl font-bold text-sm flex items-center gap-2">
+            Create Collage <i data-lucide="chevron-right" class="w-4 h-4"></i>
+        </button>
     </div>
 
+    <!-- --- NAVIGATION --- -->
+    <nav class="fixed bottom-0 inset-x-0 glass-panel border-t border-white/10 px-6 py-3 z-50 flex justify-around">
+        <button @click="step = 'upload'" :class="step === 'upload' ? 'text-cyan-400' : 'text-slate-500'" class="flex flex-col items-center gap-1">
+            <i data-lucide="scan" class="w-6 h-6"></i>
+            <span class="text-[10px] font-bold">SCANNER</span>
+        </button>
+        <button @click="step = 'library'" :class="step === 'library' ? 'text-cyan-400' : 'text-slate-500'" class="flex flex-col items-center gap-1">
+            <i data-lucide="library" class="w-6 h-6"></i>
+            <span class="text-[10px] font-bold">LIBRARY</span>
+        </button>
+        <button @click="step = 'editor'" :class="step === 'editor' ? 'text-cyan-400' : 'text-slate-500'" class="flex flex-col items-center gap-1">
+            <i data-lucide="layout" class="w-6 h-6"></i>
+            <span class="text-[10px] font-bold">EDITOR</span>
+        </button>
+    </nav>
+
     <script>
-        // CONFIGURATION (Matches your Repo)
-        const username = "alongbots";
-        const repo = "Collage";
-        const folder = "images";
-        
-        let allSkins = [];
-        let selectedIds = [];
-
-        // 1. FETCH FROM GITHUB
-        async function fetchSkins() {
-            const grid = document.getElementById('skinGrid');
-            const status = document.getElementById('status');
-
-            try {
-                const response = await fetch(`https://api.github.com/repos/${username}/${repo}/contents/${folder}`);
-                if (!response.ok) throw new Error("Repo not found or Private");
+        function app() {
+            return {
+                step: 'library', // Default step
+                username: "alongbots",
+                repo: "Collage",
+                folder: "images",
                 
-                const files = await response.json();
+                skins: [],
+                searchQuery: '',
+                activeFilters: [],
+                isDragging: false,
+                isScanning: false,
+                scanStatus: '',
                 
-                allSkins = files.filter(f => f.name.match(/\.(jpg|jpeg|png|webp)$/i)).map(file => {
-                    const nameParts = file.name.split('.')[0].split('_');
-                    return {
-                        id: file.sha,
-                        url: file.download_url,
-                        tag: nameParts[0] || 'Basic',
-                        hero: (nameParts[1] || 'Hero').replace(/-/g, ' '),
-                        skinName: (nameParts[2] || '').replace(/-/g, ' '),
-                        fileName: file.name.toLowerCase()
-                    };
-                });
+                editor: {
+                    cols: 4,
+                    gap: 8,
+                    rounded: 8,
+                    bgColor: '#05070a',
+                    showText: true,
+                    showRarity: true
+                },
 
-                status.style.display = 'none';
-                renderLibrary();
+                filters: ['Legend', 'Collector', 'Epic', 'Special', 'Elite', 'Starlight', 'KOF', 'Aspirants', 'Zodiac'],
 
-            } catch (err) {
-                status.innerHTML = `Error: ${err.message}. Check if your GitHub Repo is Public.`;
-            }
+                async initData() {
+                    lucide.createIcons();
+                    await this.loadSkins();
+                },
+
+                async loadSkins() {
+                    try {
+                        const url = `https://api.github.com/repos/${this.username}/${this.repo}/contents/${this.folder}`;
+                        const response = await fetch(url);
+                        if (!response.ok) throw new Error("Repo Error");
+                        const files = await response.json();
+                        
+                        this.skins = files
+                            .filter(f => f.name.match(/\.(jpg|jpeg|png|webp)$/i))
+                            .map((file, index) => {
+                                // SMART PARSING: Hero_SkinName_Rarity_Tag.jpg
+                                const parts = file.name.split('.')[0].split('_');
+                                return {
+                                    id: index,
+                                    url: file.download_url,
+                                    hero: parts[0] || 'Hero',
+                                    name: (parts[1] || 'Default').replace(/-/g, ' '),
+                                    rarity: parts[2] || 'Normal',
+                                    tags: parts.slice(3) || [],
+                                    selected: false,
+                                    owned: false,
+                                    visible: true
+                                };
+                            });
+                    } catch (e) {
+                        console.error("Failed to load skins", e);
+                    }
+                },
+
+                get groupedSkins() {
+                    const filtered = this.skins.map(skin => {
+                        const query = this.searchQuery.toLowerCase();
+                        const matchesSearch = !query || 
+                                            skin.hero.toLowerCase().includes(query) || 
+                                            skin.name.toLowerCase().includes(query) ||
+                                            skin.rarity.toLowerCase().includes(query);
+                        
+                        const matchesFilter = this.activeFilters.length === 0 || 
+                                            this.activeFilters.some(f => 
+                                                skin.rarity.includes(f) || skin.tags.includes(f)
+                                            );
+
+                        skin.visible = matchesSearch && matchesFilter;
+                        return skin;
+                    });
+
+                    return filtered.reduce((acc, skin) => {
+                        if (!acc[skin.hero]) acc[skin.hero] = [];
+                        acc[skin.hero].push(skin);
+                        return acc;
+                    }, {});
+                },
+
+                get selectedSkins() {
+                    return this.skins.filter(s => s.selected);
+                },
+
+                toggleSkin(skin) {
+                    skin.selected = !skin.selected;
+                    setTimeout(() => lucide.createIcons(), 10);
+                },
+
+                toggleFilter(filter) {
+                    if (this.activeFilters.includes(filter)) {
+                        this.activeFilters = this.activeFilters.filter(f => f !== filter);
+                    } else {
+                        this.activeFilters.push(filter);
+                    }
+                },
+
+                clearSelection() {
+                    this.skins.forEach(s => s.selected = false);
+                },
+
+                handleUpload(e) {
+                    const file = e.target.files[0];
+                    if (file) this.simulateScan();
+                },
+
+                handleDrop(e) {
+                    this.isDragging = false;
+                    this.simulateScan();
+                },
+
+                simulateScan() {
+                    this.isScanning = true;
+                    const steps = ["Analyzing pixels...", "Identifying portraits...", "Matching Rarity...", "Finalizing results..."];
+                    let i = 0;
+                    
+                    const interval = setInterval(() => {
+                        this.scanStatus = steps[i];
+                        i++;
+                        if (i >= steps.length) {
+                            clearInterval(interval);
+                            this.isScanning = false;
+                            this.autoSelectOwned();
+                            this.step = 'library';
+                        }
+                    }, 800);
+                },
+
+                autoSelectOwned() {
+                    // Logic: Simulate that we found 5 random skins from the database
+                    const randomSkins = [...this.skins].sort(() => 0.5 - Math.random()).slice(0, 12);
+                    randomSkins.forEach(s => {
+                        s.owned = true;
+                        s.selected = true;
+                    });
+                    alert(`Found ${randomSkins.length} skins from your screenshot!`);
+                },
+
+                exportCollage() {
+                    const node = document.getElementById('collage-canvas');
+                    const btn = event.currentTarget;
+                    const originalText = btn.innerHTML;
+                    btn.innerText = "Processing...";
+                    
+                    htmlToImage.toPng(node, { quality: 1, pixelRatio: 3 })
+                        .then((dataUrl) => {
+                            const link = document.createElement('a');
+                            link.download = `mlbb-collage-${Date.now()}.png`;
+                            link.href = dataUrl;
+                            link.click();
+                            btn.innerHTML = originalText;
+                            lucide.createIcons();
+                        })
+                        .catch((error) => {
+                            console.error('Export failed', error);
+                            btn.innerHTML = originalText;
+                        });
+                }
+            };
         }
-
-        // 2. RENDER LIBRARY
-        function renderLibrary() {
-            const grid = document.getElementById('skinGrid');
-            const term = document.getElementById('searchBar').value.toLowerCase();
-            grid.innerHTML = '';
-
-            const filtered = allSkins.filter(s => s.fileName.includes(term));
-
-            filtered.forEach(skin => {
-                const isSelected = selectedIds.includes(skin.id);
-                const card = document.createElement('div');
-                card.className = `skin-card ${isSelected ? 'selected' : ''}`;
-                card.innerHTML = `
-                    <img src="${skin.url}" loading="lazy">
-                    <div class="skin-info">
-                        <span class="hero-name">${skin.hero}</span>
-                        <span class="tag-badge">${skin.tag}</span>
-                    </div>
-                `;
-                card.onclick = () => toggleSkin(skin.id);
-                grid.appendChild(card);
-            });
-        }
-
-        // 3. SELECTION LOGIC
-        function toggleSkin(id) {
-            if (selectedIds.includes(id)) {
-                selectedIds = selectedIds.filter(i => i !== id);
-            } else {
-                selectedIds.push(id);
-            }
-            renderLibrary();
-            updateCollage();
-        }
-
-        // 4. UPDATE COLLAGE BOX
-        function updateCollage() {
-            const output = document.getElementById('collage-output');
-            const hint = document.getElementById('collage-hint');
-            
-            output.querySelectorAll('.collage-item').forEach(el => el.remove());
-            
-            if (selectedIds.length > 0) {
-                hint.style.display = 'none';
-                selectedIds.forEach(id => {
-                    const skin = allSkins.find(s => s.id === id);
-                    const item = document.createElement('div');
-                    item.className = 'collage-item';
-                    item.innerHTML = `<img src="${skin.url}">`;
-                    output.appendChild(item);
-                });
-            } else {
-                hint.style.display = 'block';
-            }
-        }
-
-        // 5. PROFILE UPLOAD
-        document.getElementById('profileInput').addEventListener('change', function(e) {
-            const file = e.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = (event) => {
-                    document.getElementById('profilePreview').src = event.target.result;
-                    document.querySelector('.upload-box .box-label').style.display = 'none';
-                };
-                reader.readAsDataURL(file);
-            }
-        });
-
-        // 6. EXPORT FINAL PRODUCT
-        async function downloadProduct() {
-            const area = document.getElementById('capture-area');
-            const btn = document.querySelector('.btn-export');
-            btn.innerText = "Processing...";
-
-            const canvas = await html2canvas(area, {
-                backgroundColor: '#0b0a1a',
-                scale: 2, // Double resolution for high quality
-                useCORS: true
-            });
-
-            const link = document.createElement('a');
-            link.download = `MLBB-Studio-Product-${Date.now()}.png`;
-            link.href = canvas.toDataURL('image/png');
-            link.click();
-            btn.innerText = "Export PNG";
-        }
-
-        // SEARCH LISTENER
-        document.getElementById('searchBar').addEventListener('input', renderLibrary);
-
-        // INIT
-        fetchSkins();
     </script>
 </body>
-</html>
+    </html>
