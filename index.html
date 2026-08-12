@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>MLBB Skin Collage Maker</title>
+    <title>ALONG COLLAGE MAKER</title>
     
     <!-- Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Poppins:wght@300;400;600;800&display=swap" rel="stylesheet">
@@ -14,13 +14,13 @@
 
     <style>
         :root {
-            --bg: #0a0a12;
-            --panel: rgba(20, 20, 30, 0.75);
-            --panel-border: rgba(255, 255, 255, 0.1);
-            --accent-1: #00d2ff;
-            --accent-2: #9d00ff;
-            --text-main: #ffffff;
-            --text-muted: #888899;
+            --bg: #0d1526;
+            --panel: rgba(23, 32, 49, 0.8);
+            --panel-border: rgba(148, 163, 184, 0.15);
+            --accent-1: #3b82f6;
+            --accent-2: #94a3b8;
+            --text-main: #eef3fa;
+            --text-muted: #8d9cb3;
             
             /* Rarity Colors */
             --legend: #ff0055;
@@ -37,12 +37,15 @@
 
         body {
             background-color: var(--bg);
-            background-image: radial-gradient(circle at 50% 0%, rgba(157, 0, 255, 0.15), transparent 50%);
+            background-image: radial-gradient(circle at 50% 0%, rgba(59, 130, 246, 0.15), transparent 50%);
             color: var(--text-main);
             font-family: 'Poppins', sans-serif;
             min-height: 100vh;
             overflow-x: hidden;
+            -webkit-tap-highlight-color: transparent;
         }
+
+        html { scroll-behavior: smooth; }
 
         /* --- UI COMPONENTS --- */
         .glass {
@@ -70,7 +73,7 @@
             justify-content: center;
             gap: 8px;
         }
-        .btn:hover { opacity: 0.9; transform: translateY(-2px); box-shadow: 0 5px 15px rgba(157,0,255,0.4); }
+        .btn:hover { opacity: 0.9; transform: translateY(-2px); box-shadow: 0 5px 15px rgba(59,130,246,0.4); }
         .btn-outline {
             background: transparent;
             border: 1px solid var(--accent-1);
@@ -156,13 +159,24 @@
             transition: 0.3s;
             margin-bottom: 20px;
         }
-        .upload-area:hover { border-color: var(--accent-1); background: rgba(0,210,255,0.05); }
+        .upload-area:hover { border-color: var(--accent-1); background: rgba(59,130,246,0.05); }
         .upload-icon { font-size: 3rem; margin-bottom: 15px; opacity: 0.7; }
         #preview-img { max-width: 100%; max-height: 300px; border-radius: 8px; display: none; margin: 20px auto; }
         .scan-loader { display: none; margin: 20px 0; color: var(--accent-1); font-family: 'Orbitron'; }
 
         /* --- SCREEN 2: LIBRARY --- */
-        .search-bar { margin-bottom: 20px; position: sticky; top: 130px; z-index: 90; }
+        .search-bar {
+            margin-bottom: 20px;
+            position: sticky;
+            top: 130px;
+            z-index: 90;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px;
+        }
+        .search-bar input { flex: 1; min-width: 0; }
+        .search-bar .btn { flex-shrink: 0; }
         
         .selection-bar {
             display: flex;
@@ -193,24 +207,25 @@
 
         .skin-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-            gap: 15px;
+            grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+            gap: 10px;
         }
 
         .skin-card {
-            border-radius: 12px;
+            border-radius: 10px;
             overflow: hidden;
             position: relative;
-            transition: 0.2s;
+            transition: 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
             border: 2px solid transparent;
             cursor: pointer;
         }
-        .skin-card .img-box { width: 100%; aspect-ratio: 1/1; background: #111; }
-        .skin-card img { width: 100%; height: 100%; object-fit: cover; transition: 0.3s; }
-        .skin-card:hover img { transform: scale(1.05); }
+        .skin-card:hover { transform: translateY(-4px); box-shadow: 0 8px 18px rgba(0,0,0,0.45); }
+        .skin-card .img-box { width: 100%; aspect-ratio: 1/1; background: #1a2334; }
+        .skin-card img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1); }
+        .skin-card:hover img { transform: scale(1.08); }
         
         .skin-info {
-            padding: 8px;
+            padding: 5px;
             text-align: center;
             background: linear-gradient(to top, rgba(0,0,0,0.9) 20%, transparent);
             position: absolute;
@@ -218,11 +233,11 @@
             width: 100%;
         }
 
-        .hero-name { display: block; font-weight: 600; font-size: 0.8rem; text-shadow: 0 2px 4px black; margin-bottom: 4px; }
-        .tag-badge { font-size: 0.6rem; font-weight: bold; padding: 2px 6px; border-radius: 4px; text-transform: uppercase; border: 1px solid; }
+        .hero-name { display: block; font-weight: 600; font-size: 0.7rem; text-shadow: 0 2px 4px black; margin-bottom: 3px; }
+        .tag-badge { font-size: 0.55rem; font-weight: bold; padding: 2px 5px; border-radius: 4px; text-transform: uppercase; border: 1px solid; }
 
         /* Selection States */
-        .skin-card.selected { border-color: var(--accent-1); box-shadow: 0 0 15px rgba(0,210,255,0.4); }
+        .skin-card.selected { border-color: var(--accent-1); box-shadow: 0 0 15px rgba(59,130,246,0.4); }
         .skin-card.selected::after {
             content: '✓'; position: absolute; top: 10px; right: 10px;
             background: var(--accent-1); color: black; font-weight: bold;
@@ -299,12 +314,33 @@
         .collage-item:hover .remove-btn { opacity: 1; }
 
         #status-msg { text-align: center; padding: 20px; color: var(--text-muted); }
+
+        /* --- PHONE SUPPORT --- */
+        @media (max-width: 768px) {
+            header { padding: 12px 10px; gap: 10px; }
+            h1 { font-size: 1.1rem; letter-spacing: 2px; }
+            .nav-tabs { justify-content: flex-start; -webkit-overflow-scrolling: touch; }
+            .tab { padding: 8px 12px; font-size: 0.78rem; }
+            .container { padding: 12px; }
+            .upload-area { padding: 25px 15px; }
+            .upload-icon { font-size: 2rem; }
+            .search-bar { top: 95px; }
+            .selection-bar { top: 181px; flex-wrap: wrap; }
+            .skin-grid { grid-template-columns: repeat(auto-fill, minmax(78px, 1fr)); gap: 8px; }
+            .hero-name { font-size: 0.62rem; }
+            .tag-badge { font-size: 0.5rem; padding: 1px 4px; }
+            .row-title { font-size: 1rem; }
+            #collage-wrapper { min-width: 260px; }
+        }
+        @media (hover: none) {
+            .remove-btn { opacity: 1; }
+        }
     </style>
 </head>
 <body>
 
     <header>
-        <h1>MLBB Collage Along</h1>
+        <h1>ALONG COLLAGE MAKER</h1>
         <div class="nav-tabs">
             <div class="tab active" onclick="navTo('upload')">1. Scan Account</div>
             <div class="tab" onclick="navTo('library')">2. Skin Library</div>
@@ -345,7 +381,10 @@
 
         <!-- SCREEN 2: LIBRARY -->
         <div id="screen-library" class="screen">
-            <input type="text" id="search-input" class="search-bar glass" placeholder="Search hero name or skin name (e.g. Gusion, Collector...)" onkeyup="filterSkins()">
+            <div class="search-bar glass">
+                <input type="text" id="search-input" placeholder="Search hero name or skin name (e.g. Gusion, Collector...)" onkeyup="filterSkins()">
+                <button type="button" class="btn btn-sm" onclick="filterSkins()">Search</button>
+            </div>
             
             <div class="selection-bar glass">
                 <span id="select-counter">0 Skins Selected</span>
@@ -433,19 +472,15 @@
                 
                 files.forEach(file => {
                     if (file.name.match(/\.(jpg|jpeg|png|webp|gif)$/i)) {
-                        // FILENAME DETECTION: layla-coll.jpg.webp -> Hero: Layla
-                        // Split by - or _ or . and take the first part as Hero
                         const cleanName = file.name.split('.')[0];
                         const parts = cleanName.split(/[-_]/);
                         
                         let hero = parts[0];
                         hero = hero.charAt(0).toUpperCase() + hero.slice(1).toLowerCase();
                         
-                        // Detect Skin Name/Tag for search and badge
                         let skinName = parts.slice(1).join(' ') || "Basic";
                         let tag = "Basic";
                         
-                        // Check if any specific rarity keyword exists in the name
                         rarities.forEach(r => {
                             if (file.name.toLowerCase().includes(r.toLowerCase())) tag = r;
                         });
@@ -476,7 +511,6 @@
             
             document.getElementById(`screen-${screenId}`).classList.add('active');
             
-            // Find current tab by text content or logic to add active class
             const tabs = document.querySelectorAll('.tab');
             if(screenId === 'upload') tabs[0].classList.add('active');
             if(screenId === 'library') tabs[1].classList.add('active');
@@ -523,19 +557,17 @@
             }, 2500);
         }
 
-        // --- LIBRARY RENDERING (GROUP BY HERO) ---
+        // --- LIBRARY RENDERING ---
         function renderLibrary(skins) {
             const container = document.getElementById('library-container');
             container.innerHTML = '';
             
-            // Group by Hero
             const groupedByHero = {};
             skins.forEach(skin => {
                 if (!groupedByHero[skin.hero]) groupedByHero[skin.hero] = [];
                 groupedByHero[skin.hero].push(skin);
             });
 
-            // Sort heroes alphabetically
             const sortedHeroes = Object.keys(groupedByHero).sort();
 
             sortedHeroes.forEach(heroName => {
@@ -577,7 +609,6 @@
             renderLibrary(filtered);
         }
 
-        // --- SKIN SELECTION ---
         function toggleSkin(id) {
             const safeId = `card-${id.replace(/\./g, '-')}`;
             const card = document.getElementById(safeId);
@@ -673,30 +704,48 @@
             grid.style.gap = `${gap}px`;
         }
 
+        /**
+         * UPDATED EXPORT FUNCTION FOR HD QUALITY
+         */
         function exportCollage() {
             const wrapper = document.getElementById('collage-wrapper');
             const btn = event.target;
             const originalText = btn.innerText;
-            document.querySelectorAll('.remove-btn').forEach(btn => btn.style.display = 'none');
-            btn.innerText = "Rendering...";
             
+            // UI Feedback and Cleanup
+            document.querySelectorAll('.remove-btn').forEach(btn => btn.style.display = 'none');
+            btn.innerText = "Rendering HD...";
+            btn.disabled = true;
+            btn.style.opacity = "0.7";
+            
+            // Use html2canvas with high-scale settings
             html2canvas(wrapper, {
-                useCORS: true,
-                allowTaint: true,
-                scale: 3, 
-                backgroundColor: "#000000"
+                useCORS: true,             // Preserve quality of external assets
+                allowTaint: false,         // Set to false when using CORS for cleaner result
+                scale: 4,                  // HD Output (4x multiplier)
+                backgroundColor: "#000000",
+                imageTimeout: 0,           // Wait for all images to finish loading
+                logging: false
             }).then(canvas => {
                 const link = document.createElement('a');
-                link.download = `Showcase_${Date.now()}.png`;
+                link.download = `MLBB_HD_Showcase_${Date.now()}.png`;
+                
+                // Export as PNG (Lossless)
                 link.href = canvas.toDataURL('image/png', 1.0);
                 link.click();
+                
+                // Restore UI
                 document.querySelectorAll('.remove-btn').forEach(btn => btn.style.display = 'flex');
                 btn.innerText = originalText;
+                btn.disabled = false;
+                btn.style.opacity = "1";
             }).catch(err => {
-                console.error("Export failed:", err);
-                alert("Export failed. Check console.");
+                console.error("HD Export failed:", err);
+                alert("Export failed. Please try again.");
                 document.querySelectorAll('.remove-btn').forEach(btn => btn.style.display = 'flex');
                 btn.innerText = originalText;
+                btn.disabled = false;
+                btn.style.opacity = "1";
             });
         }
 
