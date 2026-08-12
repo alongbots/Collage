@@ -1,6 +1,8 @@
-// package.json
 {
   "name": "mlbb-skins-downloader",
   "version": "1.0.0",
-  "private": true
+  "private": true,
+  "engines": {
+    "node": "18.x"
+  }
 }
