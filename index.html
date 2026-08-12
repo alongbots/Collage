@@ -184,11 +184,10 @@
             align-items: center;
             gap: 15px;
             text-transform: uppercase;
-            color: var(--accent-1);
         }
         .row-title::after {
             content: ""; flex: 1; height: 1px;
-            background: linear-gradient(90deg, var(--accent-1), transparent);
+            background: linear-gradient(90deg, currentColor, transparent);
             opacity: 0.3;
         }
 
@@ -260,7 +259,7 @@
         
         #collage-wrapper {
             background: #000;
-            padding: 0px; 
+            padding: 0px;
             position: relative;
             min-width: 300px;
             width: 100%;
@@ -272,18 +271,18 @@
 
         #profile-header-container {
             width: 100%;
-            display: none; 
+            display: none;
         }
         
         #profile-header-container img {
             width: 100%;
-            display: block; 
+            display: block;
             object-fit: cover;
         }
 
         #collage-grid {
             display: grid;
-            gap: 0px; 
+            gap: 0px;
             transition: 0.3s;
             width: 100%;
         }
@@ -346,7 +345,7 @@
 
         <!-- SCREEN 2: LIBRARY -->
         <div id="screen-library" class="screen">
-            <input type="text" id="search-input" class="search-bar glass" placeholder="Search by Hero name or Skin name (e.g. Gusion, Legend, Collector...)" onkeyup="filterSkins()">
+            <input type="text" id="search-input" class="search-bar glass" placeholder="Search hero name or skin name (e.g. Gusion, Collector...)" onkeyup="filterSkins()">
             
             <div class="selection-bar glass">
                 <span id="select-counter">0 Skins Selected</span>
@@ -430,23 +429,34 @@
                 if (!response.ok) throw new Error("Could not access repository.");
                 
                 const files = await response.json();
+                const rarities = ['Legend', 'Collector', 'Zenith', 'Epic', 'Special', 'Elite', 'Starlight'];
                 
                 files.forEach(file => {
                     if (file.name.match(/\.(jpg|jpeg|png|webp|gif)$/i)) {
-                        const parts = file.name.split('_');
-                        const tag = parts[0] || "Basic";
-                        let hero = parts[1] ? parts[1].split('.')[0].replace(/-/g, ' ') : "Unknown Hero";
+                        // FILENAME DETECTION: layla-coll.jpg.webp -> Hero: Layla
+                        // Split by - or _ or . and take the first part as Hero
+                        const cleanName = file.name.split('.')[0];
+                        const parts = cleanName.split(/[-_]/);
                         
-                        // Clean up hero name (handles cases like "Gusion-Soul" or extra parts)
-                        const heroBase = hero.split(' ')[0]; 
+                        let hero = parts[0];
+                        hero = hero.charAt(0).toUpperCase() + hero.slice(1).toLowerCase();
+                        
+                        // Detect Skin Name/Tag for search and badge
+                        let skinName = parts.slice(1).join(' ') || "Basic";
+                        let tag = "Basic";
+                        
+                        // Check if any specific rarity keyword exists in the name
+                        rarities.forEach(r => {
+                            if (file.name.toLowerCase().includes(r.toLowerCase())) tag = r;
+                        });
 
                         skinDatabase.push({
                             id: file.name,
                             url: file.download_url,
                             hero: hero,
+                            skinName: skinName,
                             tag: tag,
-                            heroGroup: heroBase, // Key used for grouping Gusion skins together
-                            searchString: `${hero} ${tag} ${file.name}`.toLowerCase()
+                            searchString: `${hero} ${skinName} ${tag}`.toLowerCase()
                         });
                     }
                 });
@@ -465,7 +475,8 @@
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
             
             document.getElementById(`screen-${screenId}`).classList.add('active');
-            // Find tab manually since event.target might be inner text
+            
+            // Find current tab by text content or logic to add active class
             const tabs = document.querySelectorAll('.tab');
             if(screenId === 'upload') tabs[0].classList.add('active');
             if(screenId === 'library') tabs[1].classList.add('active');
@@ -512,28 +523,27 @@
             }, 2500);
         }
 
-        // --- LIBRARY RENDERING (GROUPED BY HERO) ---
+        // --- LIBRARY RENDERING (GROUP BY HERO) ---
         function renderLibrary(skins) {
             const container = document.getElementById('library-container');
             container.innerHTML = '';
             
-            // Grouping by Hero name
-            const heroGroups = {};
+            // Group by Hero
+            const groupedByHero = {};
             skins.forEach(skin => {
-                if (!heroGroups[skin.heroGroup]) heroGroups[skin.heroGroup] = [];
-                heroGroups[skin.heroGroup].push(skin);
+                if (!groupedByHero[skin.hero]) groupedByHero[skin.hero] = [];
+                groupedByHero[skin.hero].push(skin);
             });
 
             // Sort heroes alphabetically
-            const sortedHeroNames = Object.keys(heroGroups).sort();
+            const sortedHeroes = Object.keys(groupedByHero).sort();
 
-            sortedHeroNames.forEach(heroName => {
+            sortedHeroes.forEach(heroName => {
                 const section = document.createElement('div');
                 section.className = 'category-row';
                 
                 let gridHtml = '';
-                // Sort skins within the hero group by rarity priority if needed
-                heroGroups[heroName].forEach(item => {
+                groupedByHero[heroName].forEach(item => {
                     const isSelected = selectedSkins.has(item.id) ? 'selected' : '';
                     const isOwned = ownedSkins.has(item.id) ? 'owned' : '';
                     gridHtml += `
@@ -550,7 +560,7 @@
                 });
 
                 section.innerHTML = `
-                    <div class="row-title">${heroName} <span style="font-size: 0.8rem; opacity:0.6;">(${heroGroups[heroName].length})</span></div>
+                    <div class="row-title">${heroName} <span style="font-size: 0.8rem; opacity:0.6;">(${groupedByHero[heroName].length})</span></div>
                     <div class="skin-grid">${gridHtml}</div>
                 `;
                 container.appendChild(section);
@@ -612,7 +622,7 @@
             document.getElementById('profile-header-img').src = '';
             document.getElementById('profile-header-container').style.display = 'none';
             document.getElementById('remove-header-btn').style.display = 'none';
-            document.getElementById('header-upload').value = ""; 
+            document.getElementById('header-upload').value = "";
         }
 
         function renderCollageEditor() {
@@ -649,7 +659,6 @@
             selectedSkins.delete(id);
             updateCounter();
             renderCollageEditor();
-            
             const safeId = `card-${id.replace(/\./g, '-')}`;
             const card = document.getElementById(safeId);
             if(card) card.classList.remove('selected');
@@ -664,12 +673,10 @@
             grid.style.gap = `${gap}px`;
         }
 
-        // --- EXPORT ---
         function exportCollage() {
             const wrapper = document.getElementById('collage-wrapper');
             const btn = event.target;
             const originalText = btn.innerText;
-            
             document.querySelectorAll('.remove-btn').forEach(btn => btn.style.display = 'none');
             btn.innerText = "Rendering...";
             
@@ -683,12 +690,11 @@
                 link.download = `Showcase_${Date.now()}.png`;
                 link.href = canvas.toDataURL('image/png', 1.0);
                 link.click();
-                
                 document.querySelectorAll('.remove-btn').forEach(btn => btn.style.display = 'flex');
                 btn.innerText = originalText;
             }).catch(err => {
                 console.error("Export failed:", err);
-                alert("Export failed.");
+                alert("Export failed. Check console.");
                 document.querySelectorAll('.remove-btn').forEach(btn => btn.style.display = 'flex');
                 btn.innerText = originalText;
             });
