@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MLBB Skin Inventory</title>
+    <title>MLBB Skin Collage</title>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -27,17 +27,18 @@
 
         header {
             text-align: center;
-            padding: 40px 0;
+            padding: 30px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            margin-bottom: 30px;
         }
 
         h1 {
             font-family: 'Orbitron', sans-serif;
-            font-size: 2.5rem;
-            letter-spacing: 5px;
             background: linear-gradient(90deg, #00d2ff, #9d00ff);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             text-transform: uppercase;
+            letter-spacing: 5px;
         }
 
         .category-row { margin-bottom: 50px; }
@@ -62,7 +63,7 @@
 
         .skin-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
             gap: 20px;
         }
 
@@ -71,19 +72,19 @@
             border-radius: 12px;
             overflow: hidden;
             position: relative;
-            transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: 0.3s ease;
             border: 1px solid rgba(255,255,255,0.05);
         }
 
         .skin-card:hover {
             transform: translateY(-10px);
-            box-shadow: 0 15px 30px rgba(0,0,0,0.8);
-            border-color: rgba(255,255,255,0.2);
+            border-color: rgba(255,255,255,0.3);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.5);
         }
 
         .img-box {
             width: 100%;
-            height: 260px;
+            height: 240px;
             background: #000;
         }
 
@@ -94,9 +95,9 @@
         }
 
         .skin-info {
-            padding: 12px;
+            padding: 10px;
             text-align: center;
-            background: linear-gradient(to top, rgba(0,0,0,0.9), transparent);
+            background: linear-gradient(to top, black, transparent);
             position: absolute;
             bottom: 0;
             width: 100%;
@@ -105,9 +106,9 @@
         .hero-name {
             display: block;
             font-weight: 600;
-            font-size: 0.9rem;
-            margin-bottom: 5px;
+            font-size: 0.85rem;
             text-shadow: 0 2px 4px black;
+            margin-bottom: 5px;
         }
 
         .tag-badge {
@@ -119,55 +120,75 @@
             border: 1px solid;
         }
 
-        /* Color Coding */
+        /* Colors */
         .Legend { color: var(--legend); }
         .Collector { color: var(--collector); }
         .Epic { color: var(--epic); }
         .Special { color: var(--special); }
         .Elite { color: var(--elite); }
         .Starlight { color: var(--starlight); }
+
+        #status { text-align: center; color: #888; margin-top: 50px; }
     </style>
 </head>
 <body>
 
     <header>
-        <h1>Hero Skins</h1>
+        <h1>Skin Gallery</h1>
     </header>
 
+    <div id="status">Scanning images folder...</div>
     <div id="main-container"></div>
 
     <script>
-        async function fetchSkins() {
-            try {
-                // FETCH FROM THE "images" FILE
-                const response = await fetch('images');
-                const text = await response.text();
-                const lines = text.split(/\r?\n/); // Split by lines
+        // CHANGE THESE IF NECESSARY
+        const username = "alongbots";
+        const repo = "Collage";
+        const folder = "images";
 
+        async function loadSkins() {
+            const status = document.getElementById('status');
+            const container = document.getElementById('main-container');
+
+            try {
+                // FETCH FILE LIST FROM GITHUB API
+                const url = `https://api.github.com/repos/${username}/${repo}/contents/${folder}`;
+                const response = await fetch(url);
+                
+                if (!response.ok) throw new Error("Make sure your Repo is PUBLIC");
+                
+                const files = await response.json();
                 const groups = {};
 
-                lines.forEach(line => {
-                    const file = line.trim();
-                    if (!file) return;
+                files.forEach(file => {
+                    // Only process image files
+                    if (file.name.match(/\.(jpg|jpeg|png|webp|gif)$/i)) {
+                        const parts = file.name.split('_');
+                        const tag = parts[0] || "Normal";
+                        let hero = parts[1] ? parts[1].split('.')[0] : "Hero";
+                        hero = hero.replace(/-/g, ' ');
 
-                    const parts = file.split('_');
-                    const tag = parts[0] || "Normal";
-                    let name = parts[1] ? parts[1].split('.')[0] : "Hero";
-                    name = name.replace(/-/g, ' ');
-
-                    if (!groups[tag]) groups[tag] = [];
-                    groups[tag].push({ file, name, tag });
+                        if (!groups[tag]) groups[tag] = [];
+                        groups[tag].push({ 
+                            url: file.download_url, 
+                            name: hero, 
+                            tag: tag 
+                        });
+                    }
                 });
 
-                renderUI(groups);
+                status.style.display = 'none';
+                render(groups);
+
             } catch (err) {
-                console.error("Error fetching images file:", err);
+                status.innerHTML = "Error: " + err.message + "<br>Check if your GitHub Repo is Public.";
+                console.error(err);
             }
         }
 
-        function renderUI(groups) {
+        function render(groups) {
             const container = document.getElementById('main-container');
-            const priority = ['Legend', 'Collector', 'Epic', 'Special', 'Elite', 'Starlight'];
+            const priority = ['Legend', 'Collector', 'Zenith', 'Epic', 'Special', 'Elite', 'Starlight'];
             
             const sortedTags = Object.keys(groups).sort((a, b) => {
                 let idxA = priority.indexOf(a);
@@ -189,7 +210,7 @@
                     grid.innerHTML += `
                         <div class="skin-card">
                             <div class="img-box">
-                                <img src="images/${item.file}" alt="${item.name}">
+                                <img src="${item.url}" alt="${item.name}">
                             </div>
                             <div class="skin-info">
                                 <span class="hero-name">${item.name}</span>
@@ -201,7 +222,7 @@
             });
         }
 
-        fetchSkins();
+        loadSkins();
     </script>
 </body>
 </html>
