@@ -15,8 +15,9 @@
   button.gray { background: #3b3f4a; }
   #progress { height: 8px; background: #23262f; border-radius: 4px; overflow: hidden; margin: 12px 0; display: none; }
   #progress > div { height: 100%; width: 0; background: #22c55e; transition: width .2s; }
-  #status { color: #9ca3af; font-size: 13px; }
-  input { width: 100%; padding: 8px 10px; border-radius: 8px; border: 1px solid #2c3038; background: #171a21; color: #e6e8ef; margin: 8px 0 14px; }
+  #status { color: #9ca3af; font-size: 13px; white-space: pre-wrap; }
+  #error { display: none; background: #3b1116; border: 1px solid #7f1d1d; color: #fca5a5; border-radius: 8px; padding: 12px; font-size: 13px; margin: 12px 0; }
+  input { width: 100%; padding: 8px 10px; border-radius: 8px; border: 1px solid #2c3038; background: #171a21; color: #e6e8ef; margin: 8px 0 14px; box-sizing: border-box; }
   table { width: 100%; border-collapse: collapse; font-size: 13px; }
   th, td { text-align: left; padding: 6px 8px; border-bottom: 1px solid #23262f; }
   th { position: sticky; top: 0; background: #0f1117; }
@@ -28,12 +29,13 @@
 <div class="wrap">
   <h1>MLBB Skin Downloader</h1>
   <div class="bar">
-    <button id="btnJson" class="gray">⬇ Download JSON</button>
+    <button id="btnJson" class="gray" disabled>⬇ Download JSON</button>
     <button id="btnZip" disabled>⬇ Download All as ZIP</button>
-    <button id="btnReload" class="gray">↻ Reload manifest</button>
+    <button id="btnReload" class="gray">↻ Reload</button>
   </div>
   <div id="progress"><div></div></div>
-  <div id="status">Loading skin manifest…</div>
+  <div id="error"></div>
+  <div id="status">Loading…</div>
   <input id="search" type="search" placeholder="Filter skins…" />
   <table>
     <thead><tr><th></th><th>Name</th><th>Download</th></tr></thead>
@@ -45,20 +47,46 @@
 const $ = (s) => document.querySelector(s);
 let SKINS = [];
 
+function showError(msg) {
+  const el = $('error');
+  el.style.display = 'block';
+  el.textContent = msg;
+}
+
 async function load() {
   $('btnJson').disabled = $('btnZip').disabled = true;
-  $('status').textContent = 'Fetching /api/skins…';
+  $('error').style.display = 'none';
+  $('status').textContent = 'Loading skin manifest…';
+
+  // 1) Static skins.json — instant, no serverless
   try {
-    const r = await fetch('/api/skins');
+    const t0 = performance.now();
+    const r = await fetch('/skins.json', { signal: AbortSignal.timeout(5000) });
+    if (r.ok) {
+      const data = await r.json();
+      if (Array.isArray(data.skins)) { apply(data); return; }
+    }
+  } catch (e) {
+    console.log('Static manifest unavailable:', e.message);
+  }
+
+  // 2) Fallback: live scrape endpoint (15s cap)
+  try {
+    const r = await fetch('/api/skins', { signal: AbortSignal.timeout(15000) });
     const data = await r.json();
     if (data.error) throw new Error(data.error);
-    SKINS = data.skins;
-    $('status').textContent = `${data.count} skins loaded from ${data.source}`;
-    render();
-    $('btnJson').disabled = $('btnZip').disabled = false;
+    apply(data);
   } catch (e) {
-    $('status').textContent = 'Error: ' + e.message;
+    showError('Manifest failed to load: ' + e.message + '\n→ Test ' + location.origin + '/api/skins directly in your browser.\n→ Or run: node scripts/build-manifest.js, commit public/skins.json, redeploy.');
+    $('status').textContent = 'Failed after ~15s.';
   }
+}
+
+function apply(data) {
+  SKINS = data.skins;
+  $('status').textContent = `${data.count} skins loaded · ${data.generatedAt || ''}`;
+  render();
+  $('btnJson').disabled = $('btnZip').disabled = false;
 }
 
 function render() {
@@ -73,6 +101,7 @@ function render() {
 }
 
 $('search').addEventListener('input', render);
+$('btnReload').addEventListener('click', load);
 
 $('btnJson').addEventListener('click', () => {
   const blob = new Blob([JSON.stringify({ count: SKINS.length, skins: SKINS }, null, 2)], { type: 'application/json' });
@@ -83,9 +112,6 @@ $('btnJson').addEventListener('click', () => {
   URL.revokeObjectURL(a.href);
 });
 
-$('btnReload').addEventListener('click', load);
-
-// Download all with a small concurrency pool (4 parallel), progress bar
 $('btnZip').addEventListener('click', async () => {
   const zip = new JSZip();
   const bar = $('progress'), fill = bar.querySelector('div');
