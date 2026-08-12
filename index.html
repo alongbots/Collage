@@ -3,226 +3,455 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MLBB Skin Collage</title>
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <title>MLBB Skin Collage Pro | Premium Studio</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700&family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
+    
     <style>
         :root {
-            --bg: #05070a;
-            --panel: #11141d;
-            --legend: #ffcc00;
-            --collector: #00f2ff;
-            --epic: #d644ff;
-            --special: #ff8c00;
-            --elite: #2196f3;
-            --starlight: #f48fb1;
+            --bg: #080912;
+            --surface: #111322;
+            --accent: #7d5fff;
+            --accent-glow: rgba(125, 95, 255, 0.4);
+            --text-main: #ffffff;
+            --text-dim: #a0a4cb;
+            --border: rgba(255, 255, 255, 0.08);
+            --glass: rgba(255, 255, 255, 0.03);
+            
+            /* MLBB Rarity Colors */
+            --legend: #ffcc00; --collector: #00f2ff; --epic: #d644ff; 
+            --kof: #ff4b2b; --zodiac: #4a90e2; --aspirant: #ff5e62;
         }
 
-        body {
-            background-color: var(--bg);
-            color: white;
-            font-family: 'Poppins', sans-serif;
-            margin: 0;
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { 
+            background: var(--bg); 
+            color: var(--text-main); 
+            font-family: 'Poppins', sans-serif; 
+            overflow-x: hidden;
+        }
+
+        /* --- UI LAYOUT --- */
+        .app-container {
+            display: grid;
+            grid-template-columns: 320px 1fr;
+            height: 100vh;
+        }
+
+        /* --- SIDEBAR --- */
+        aside {
+            background: var(--surface);
+            border-right: 1px solid var(--border);
             padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            overflow-y: auto;
         }
 
-        header {
-            text-align: center;
-            padding: 30px 0;
-            border-bottom: 1px solid rgba(255,255,255,0.1);
-            margin-bottom: 30px;
-        }
-
-        h1 {
+        .logo {
             font-family: 'Orbitron', sans-serif;
-            background: linear-gradient(90deg, #00d2ff, #9d00ff);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            text-transform: uppercase;
-            letter-spacing: 5px;
-        }
-
-        .category-row { margin-bottom: 50px; }
-
-        .row-title {
-            font-family: 'Orbitron', sans-serif;
-            font-size: 1.4rem;
-            margin-bottom: 20px;
+            font-size: 1.1rem;
+            color: var(--accent);
+            letter-spacing: 2px;
+            margin-bottom: 10px;
             display: flex;
             align-items: center;
-            gap: 15px;
-            text-transform: uppercase;
+            gap: 10px;
         }
 
-        .row-title::after {
-            content: "";
-            flex: 1;
-            height: 2px;
-            background: linear-gradient(90deg, currentColor, transparent);
-            opacity: 0.2;
+        .search-box {
+            background: rgba(0,0,0,0.3);
+            border: 1px solid var(--border);
+            padding: 12px;
+            border-radius: 10px;
+            color: white;
+            width: 100%;
+            outline: none;
+        }
+
+        .tag-filter-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .tag-chip {
+            font-size: 0.7rem;
+            padding: 4px 10px;
+            background: var(--glass);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .tag-chip:hover, .tag-chip.active {
+            background: var(--accent);
+            border-color: var(--accent);
+        }
+
+        /* --- MAIN CANVAS AREA --- */
+        main {
+            padding: 25px;
+            overflow-y: auto;
+            background: radial-gradient(circle at top right, #1a1535, #080912);
+        }
+
+        /* Display Boxes (Top and Bottom) */
+        .display-container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .workspace-box {
+            background: rgba(17, 19, 34, 0.6);
+            border: 2px dashed var(--border);
+            border-radius: 20px;
+            min-height: 220px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+            backdrop-filter: blur(10px);
+            transition: 0.3s;
+        }
+
+        .workspace-box:hover { border-color: var(--accent); }
+
+        .box-label {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            color: var(--text-dim);
+            pointer-events: none;
+            text-align: center;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            letter-spacing: 1px;
+        }
+
+        /* --- SKIN LIBRARY GRID --- */
+        .library-section {
+            margin-top: 40px;
+        }
+
+        .grid-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
         }
 
         .skin-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-            gap: 20px;
+            grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+            gap: 15px;
         }
 
         .skin-card {
-            background: var(--panel);
+            background: var(--surface);
             border-radius: 12px;
             overflow: hidden;
+            border: 1px solid var(--border);
+            cursor: pointer;
+            transition: 0.3s;
             position: relative;
-            transition: 0.3s ease;
-            border: 1px solid rgba(255,255,255,0.05);
         }
 
-        .skin-card:hover {
-            transform: translateY(-10px);
-            border-color: rgba(255,255,255,0.3);
-            box-shadow: 0 10px 20px rgba(0,0,0,0.5);
-        }
+        .skin-card:hover { transform: translateY(-5px); border-color: var(--accent); }
+        .skin-card.selected { border: 2px solid var(--accent); box-shadow: 0 0 15px var(--accent-glow); }
 
-        .img-box {
-            width: 100%;
-            height: 240px;
-            background: #000;
-        }
-
-        .img-box img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
-        .skin-info {
-            padding: 10px;
-            text-align: center;
-            background: linear-gradient(to top, black, transparent);
+        .skin-card img { width: 100%; height: 160px; object-fit: cover; }
+        
+        .skin-meta {
+            padding: 8px;
+            background: linear-gradient(to top, #000, transparent);
             position: absolute;
-            bottom: 0;
+            bottom: 0; width: 100%;
+            font-size: 0.75rem;
+            text-align: center;
+        }
+
+        /* --- COLLAGE EXPORT PRODUCT --- */
+        #final-collage-product {
             width: 100%;
+            background: #000;
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 5px;
+            padding: 10px;
         }
 
-        .hero-name {
-            display: block;
-            font-weight: 600;
-            font-size: 0.85rem;
-            text-shadow: 0 2px 4px black;
-            margin-bottom: 5px;
-        }
-
-        .tag-badge {
-            font-size: 0.6rem;
-            font-weight: bold;
-            padding: 2px 8px;
+        .product-item {
+            aspect-ratio: 1/1.4;
+            background: #111;
+            overflow: hidden;
             border-radius: 4px;
-            text-transform: uppercase;
-            border: 1px solid;
+        }
+        .product-item img { width: 100%; height: 100%; object-fit: cover; }
+
+        /* --- BUTTONS --- */
+        .btn-primary {
+            background: var(--accent);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: 0.3s;
         }
 
-        /* Colors */
-        .Legend { color: var(--legend); }
-        .Collector { color: var(--collector); }
-        .Epic { color: var(--epic); }
-        .Special { color: var(--special); }
-        .Elite { color: var(--elite); }
-        .Starlight { color: var(--starlight); }
+        .btn-primary:hover { opacity: 0.9; transform: scale(1.02); }
+        
+        .floating-actions {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            display: flex;
+            gap: 10px;
+            z-index: 100;
+        }
 
-        #status { text-align: center; color: #888; margin-top: 50px; }
+        #profile-preview-img { width: 100%; height: 100%; object-fit: contain; }
+
     </style>
 </head>
 <body>
 
-    <header>
-        <h1>Skin Gallery</h1>
-    </header>
+    <div class="app-container">
+        <!-- Sidebar Controls -->
+        <aside>
+            <div class="logo">✦ COLLAGE MAKER</div>
+            
+            <input type="text" id="searchBar" class="search-box" placeholder="Search hero or series...">
 
-    <div id="status">Scanning images folder...</div>
-    <div id="main-container"></div>
+            <div>
+                <label style="font-size: 0.7rem; color: var(--text-dim);">RARITY FILTERS</label>
+                <div class="tag-filter-group" id="rarity-filters">
+                    <!-- Dynamic -->
+                </div>
+            </div>
+
+            <div>
+                <label style="font-size: 0.7rem; color: var(--text-dim);">SERIES / EVENTS</label>
+                <div class="tag-filter-group" id="series-filters">
+                    <!-- Dynamic -->
+                </div>
+            </div>
+
+            <button class="btn-primary" onclick="document.getElementById('skinUpload').click()">
+                Add Skins to Library
+            </button>
+            <input type="file" id="skinUpload" multiple hidden accept="image/*">
+        </aside>
+
+        <!-- Main Workspace -->
+        <main>
+            <div class="display-container" id="capture-area">
+                
+                <!-- Profile Box -->
+                <div class="workspace-box" id="profile-box" onclick="document.getElementById('profileUpload').click()">
+                    <div class="box-label">MLBB Account Screenshot Goes Here<br>(Click to Upload)</div>
+                    <img id="profile-preview-img" src="" style="display:none;">
+                    <input type="file" id="profileUpload" hidden accept="image/*">
+                </div>
+
+                <!-- Collage Product Box -->
+                <div class="workspace-box" style="border-style: solid; background: #050505;">
+                    <div id="final-collage-product">
+                        <!-- Selected skins appear here automatically -->
+                    </div>
+                    <div class="box-label" id="collage-placeholder">MLBB Skin Collage Goes Here<br>(Select skins below)</div>
+                </div>
+
+            </div>
+
+            <!-- Library Section -->
+            <div class="library-section">
+                <div class="grid-header">
+                    <h3>Skin Library (<span id="count">0</span>)</h3>
+                    <div style="font-size: 0.8rem; color: var(--text-dim);">Auto-sequencing Active</div>
+                </div>
+                <div class="skin-grid" id="skinGrid"></div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Floating Export Button -->
+    <div class="floating-actions">
+        <button class="btn-primary" style="background: #27ae60;" onclick="exportCollage()">
+            Download / Export Final Product
+        </button>
+    </div>
 
     <script>
-        // CHANGE THESE IF NECESSARY
-        const username = "alongbots";
-        const repo = "Collage";
-        const folder = "images";
+        // --- 1. FULL TAG DICTIONARY ---
+        const RARITIES = ['Legend', 'Collector', 'Zenith', 'Mythic', 'Epic', 'Special', 'Elite', 'Starlight', 'Basic'];
+        const SERIES = [
+            'KOF', 'Zodiac', 'Aspirants', 'Sanrio', 'JJK', 'Naruto', 'AOT', 'Star Wars', 'Ducati', 
+            'Exorcist', 'STUN', 'M-World', 'Lightborn', 'SABER', 'VENOM', 'Dragon Tamer', 
+            'Blazing Bounties', 'Mistbenders', 'Soul Vessels', 'Beyond the Clouds', 'Valentine', 'Summer'
+        ];
 
-        async function loadSkins() {
-            const status = document.getElementById('status');
-            const container = document.getElementById('main-container');
+        let library = [];
+        let selectedIds = [];
 
-            try {
-                // FETCH FILE LIST FROM GITHUB API
-                const url = `https://api.github.com/repos/${username}/${repo}/contents/${folder}`;
-                const response = await fetch(url);
-                
-                if (!response.ok) throw new Error("Make sure your Repo is PUBLIC");
-                
-                const files = await response.json();
-                const groups = {};
+        // --- 2. FILE SCANNER & PARSER ---
+        const skinUpload = document.getElementById('skinUpload');
+        const skinGrid = document.getElementById('skinGrid');
 
-                files.forEach(file => {
-                    // Only process image files
-                    if (file.name.match(/\.(jpg|jpeg|png|webp|gif)$/i)) {
-                        const parts = file.name.split('_');
-                        const tag = parts[0] || "Normal";
-                        let hero = parts[1] ? parts[1].split('.')[0] : "Hero";
-                        hero = hero.replace(/-/g, ' ');
+        skinUpload.addEventListener('change', async (e) => {
+            const files = Array.from(e.target.files);
+            for (let file of files) {
+                const skin = await parseFile(file);
+                library.push(skin);
+            }
+            renderLibrary();
+        });
 
-                        if (!groups[tag]) groups[tag] = [];
-                        groups[tag].push({ 
-                            url: file.download_url, 
-                            name: hero, 
-                            tag: tag 
-                        });
-                    }
+        async function parseFile(file) {
+            const name = file.name.split('.')[0];
+            const reader = new FileReader();
+            
+            // Detect Tags
+            let detectedRarity = RARITIES.find(r => name.toLowerCase().includes(r.toLowerCase())) || 'Basic';
+            let detectedSeries = SERIES.find(s => name.toLowerCase().includes(s.toLowerCase())) || '';
+            
+            // Extract Hero Name (assuming Hero_SkinName_Tag format)
+            const parts = name.split(/[_\-\s]+/);
+            const hero = parts[0];
+
+            return new Promise(resolve => {
+                reader.onload = (e) => resolve({
+                    id: Math.random().toString(36).substr(2, 9),
+                    hero: hero,
+                    fullName: name.replace(/_/g, ' '),
+                    rarity: detectedRarity,
+                    series: detectedSeries,
+                    src: e.target.result
                 });
+                reader.readAsDataURL(file);
+            });
+        }
 
-                status.style.display = 'none';
-                render(groups);
+        // --- 3. RENDERING LOGIC ---
+        function renderLibrary() {
+            const searchTerm = document.getElementById('searchBar').value.toLowerCase();
+            skinGrid.innerHTML = '';
+            
+            const filtered = library.filter(s => 
+                s.hero.toLowerCase().includes(searchTerm) || 
+                s.fullName.toLowerCase().includes(searchTerm)
+            );
 
-            } catch (err) {
-                status.innerHTML = "Error: " + err.message + "<br>Check if your GitHub Repo is Public.";
-                console.error(err);
+            document.getElementById('count').innerText = filtered.length;
+
+            filtered.forEach(skin => {
+                const isSelected = selectedIds.includes(skin.id);
+                const card = document.createElement('div');
+                card.className = `skin-card ${isSelected ? 'selected' : ''}`;
+                card.innerHTML = `
+                    <img src="${skin.src}">
+                    <div class="skin-meta">${skin.hero}</div>
+                `;
+                card.onclick = () => toggleSkin(skin.id);
+                skinGrid.appendChild(card);
+            });
+            
+            updateCollage();
+        }
+
+        function toggleSkin(id) {
+            if (selectedIds.includes(id)) {
+                selectedIds = selectedIds.filter(sid => sid !== id);
+            } else {
+                selectedIds.push(id);
+            }
+            renderLibrary();
+        }
+
+        function updateCollage() {
+            const container = document.getElementById('final-collage-product');
+            const placeholder = document.getElementById('collage-placeholder');
+            
+            container.innerHTML = '';
+            if (selectedIds.length > 0) {
+                placeholder.style.display = 'none';
+                selectedIds.forEach(id => {
+                    const skin = library.find(s => s.id === id);
+                    const div = document.createElement('div');
+                    div.className = 'product-item';
+                    div.innerHTML = `<img src="${skin.src}">`;
+                    container.appendChild(div);
+                });
+            } else {
+                placeholder.style.display = 'block';
             }
         }
 
-        function render(groups) {
-            const container = document.getElementById('main-container');
-            const priority = ['Legend', 'Collector', 'Zenith', 'Epic', 'Special', 'Elite', 'Starlight'];
+        // --- 4. PROFILE UPLOAD ---
+        document.getElementById('profileUpload').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    const img = document.getElementById('profile-preview-img');
+                    img.src = event.target.result;
+                    img.style.display = 'block';
+                    document.querySelector('#profile-box .box-label').style.display = 'none';
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // --- 5. EXPORT SYSTEM ---
+        async function exportCollage() {
+            const area = document.getElementById('capture-area');
+            const canvas = await html2canvas(area, {
+                backgroundColor: '#080912',
+                scale: 2 // High resolution
+            });
             
-            const sortedTags = Object.keys(groups).sort((a, b) => {
-                let idxA = priority.indexOf(a);
-                let idxB = priority.indexOf(b);
-                return (idxA === -1 ? 99 : idxA) - (idxB === -1 ? 99 : idxB);
+            const link = document.createElement('a');
+            link.download = `MLBB-Collage-Expert.png`;
+            link.href = canvas.toDataURL();
+            link.click();
+        }
+
+        // --- 6. INITIALIZE FILTERS ---
+        function initFilters() {
+            const rarityCont = document.getElementById('rarity-filters');
+            RARITIES.forEach(r => {
+                const chip = document.createElement('div');
+                chip.className = 'tag-chip';
+                chip.innerText = r;
+                rarityCont.appendChild(chip);
             });
 
-            sortedTags.forEach(tag => {
-                const section = document.createElement('div');
-                section.className = 'category-row';
-                section.innerHTML = `
-                    <div class="row-title ${tag}">${tag} Skins</div>
-                    <div class="skin-grid" id="grid-${tag}"></div>
-                `;
-                container.appendChild(section);
-
-                const grid = document.getElementById(`grid-${tag}`);
-                groups[tag].forEach(item => {
-                    grid.innerHTML += `
-                        <div class="skin-card">
-                            <div class="img-box">
-                                <img src="${item.url}" alt="${item.name}">
-                            </div>
-                            <div class="skin-info">
-                                <span class="hero-name">${item.name}</span>
-                                <span class="tag-badge ${tag}">${item.tag}</span>
-                            </div>
-                        </div>
-                    `;
-                });
+            const seriesCont = document.getElementById('series-filters');
+            SERIES.slice(0, 15).forEach(s => {
+                const chip = document.createElement('div');
+                chip.className = 'tag-chip';
+                chip.innerText = s;
+                seriesCont.appendChild(chip);
             });
         }
 
-        loadSkins();
+        document.getElementById('searchBar').addEventListener('input', renderLibrary);
+        initFilters();
+
     </script>
 </body>
 </html>
