@@ -2,464 +2,700 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MLBB Skin Collage Pro</title>
-    
-    <!-- Libraries -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html-to-image/1.11.11/html-to-image.min.js"></script>
-    <script src="https://unpkg.com/lucide@latest"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>MLBB Skin Collage Maker</title>
     
     <!-- Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700&family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Poppins:wght@300;400;600;800&display=swap" rel="stylesheet">
+    
+    <!-- Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
 
     <style>
-        [x-cloak] { display: none !important; }
         :root {
-            --ml-bg: #05070a;
-            --ml-panel: #11141d;
-            --ml-accent: #00d2ff;
+            --bg: #0a0a12;
+            --panel: rgba(20, 20, 30, 0.75);
+            --panel-border: rgba(255, 255, 255, 0.1);
+            --accent-1: #00d2ff;
+            --accent-2: #9d00ff;
+            --text-main: #ffffff;
+            --text-muted: #888899;
+            
+            /* Rarity Colors */
+            --legend: #ff0055;
+            --collector: #ffaa00;
+            --zenith: #ffea00;
+            --epic: #00e6ff;
+            --special: #cc00ff;
+            --elite: #ff00aa;
+            --starlight: #00ff88;
+            --basic: #aaaaaa;
         }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
         body {
-            background-color: var(--ml-bg);
-            color: #e2e8f0;
+            background-color: var(--bg);
+            background-image: radial-gradient(circle at 50% 0%, rgba(157, 0, 255, 0.15), transparent 50%);
+            color: var(--text-main);
             font-family: 'Poppins', sans-serif;
+            min-height: 100vh;
             overflow-x: hidden;
         }
-        .font-orbitron { font-family: 'Orbitron', sans-serif; }
-        
-        /* Custom Scrollbar */
-        ::-webkit-scrollbar { width: 6px; }
-        ::-webkit-scrollbar-track { background: #05070a; }
-        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
 
-        /* Rarity Gradients */
-        .rarity-legend { border-bottom: 3px solid #ffcc00; text-shadow: 0 0 10px #ffcc00; }
-        .rarity-collector { border-bottom: 3px solid #00f2ff; text-shadow: 0 0 10px #00f2ff; }
-        .rarity-epic { border-bottom: 3px solid #d644ff; text-shadow: 0 0 10px #d644ff; }
-        
-        .glass-panel {
-            background: rgba(17, 20, 29, 0.8);
+        /* --- UI COMPONENTS --- */
+        .glass {
+            background: var(--panel);
             backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--panel-border);
+            border-radius: 16px;
         }
 
-        /* Mobile Bottom Sheet Animation */
-        .bottom-sheet {
-            transition: transform 0.3s ease-out;
+        .btn {
+            background: linear-gradient(90deg, var(--accent-1), var(--accent-2));
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 700;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: 0.3s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
         }
+        .btn:hover { opacity: 0.9; transform: translateY(-2px); box-shadow: 0 5px 15px rgba(157,0,255,0.4); }
+        .btn-outline {
+            background: transparent;
+            border: 1px solid var(--accent-1);
+            color: var(--accent-1);
+        }
+        .btn-sm { padding: 8px 16px; font-size: 0.8rem; }
+
+        input, select {
+            background: rgba(0,0,0,0.5);
+            border: 1px solid var(--panel-border);
+            color: white;
+            padding: 12px;
+            border-radius: 8px;
+            font-family: 'Poppins', sans-serif;
+            width: 100%;
+            outline: none;
+        }
+        input:focus { border-color: var(--accent-1); }
+
+        /* --- LAYOUT --- */
+        header {
+            text-align: center;
+            padding: 20px;
+            border-bottom: 1px solid var(--panel-border);
+            position: sticky;
+            top: 0;
+            background: rgba(10,10,18,0.9);
+            backdrop-filter: blur(10px);
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        h1 {
+            font-family: 'Orbitron', sans-serif;
+            background: linear-gradient(90deg, var(--accent-1), var(--accent-2));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            font-size: 1.5rem;
+        }
+
+        .nav-tabs {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            overflow-x: auto;
+            padding-bottom: 5px;
+        }
+
+        .tab {
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            border: 1px solid transparent;
+            color: var(--text-muted);
+            transition: 0.3s;
+            white-space: nowrap;
+        }
+        .tab.active {
+            background: rgba(255,255,255,0.1);
+            color: white;
+            border-color: var(--panel-border);
+        }
+
+        .container { padding: 20px; max-width: 1200px; margin: 0 auto; }
+        
+        .screen { display: none; animation: fadeIn 0.4s ease; }
+        .screen.active { display: block; }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* --- SCREEN 1: UPLOAD --- */
+        .upload-area {
+            border: 2px dashed var(--panel-border);
+            border-radius: 16px;
+            padding: 40px 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: 0.3s;
+            margin-bottom: 20px;
+        }
+        .upload-area:hover { border-color: var(--accent-1); background: rgba(0,210,255,0.05); }
+        .upload-icon { font-size: 3rem; margin-bottom: 15px; opacity: 0.7; }
+        #preview-img { max-width: 100%; max-height: 300px; border-radius: 8px; display: none; margin: 20px auto; }
+        .scan-loader { display: none; margin: 20px 0; color: var(--accent-1); font-family: 'Orbitron'; }
+
+        /* --- SCREEN 2: LIBRARY --- */
+        .search-bar { margin-bottom: 20px; position: sticky; top: 130px; z-index: 90; }
+        
+        .selection-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            margin-bottom: 20px;
+            position: sticky;
+            top: 190px;
+            z-index: 80;
+        }
+
+        .category-row { margin-bottom: 40px; }
+        .row-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.2rem;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            text-transform: uppercase;
+        }
+        .row-title::after {
+            content: ""; flex: 1; height: 1px;
+            background: linear-gradient(90deg, currentColor, transparent);
+            opacity: 0.3;
+        }
+
+        .skin-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 15px;
+        }
+
+        .skin-card {
+            border-radius: 12px;
+            overflow: hidden;
+            position: relative;
+            transition: 0.2s;
+            border: 2px solid transparent;
+            cursor: pointer;
+        }
+        .skin-card .img-box { width: 100%; aspect-ratio: 3/4; background: #111; }
+        .skin-card img { width: 100%; height: 100%; object-fit: cover; transition: 0.3s; }
+        .skin-card:hover img { transform: scale(1.05); }
+        
+        .skin-info {
+            padding: 8px;
+            text-align: center;
+            background: linear-gradient(to top, rgba(0,0,0,0.9) 20%, transparent);
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+        }
+
+        .hero-name { display: block; font-weight: 600; font-size: 0.8rem; text-shadow: 0 2px 4px black; margin-bottom: 4px; }
+        .tag-badge { font-size: 0.6rem; font-weight: bold; padding: 2px 6px; border-radius: 4px; text-transform: uppercase; border: 1px solid; }
+
+        /* Selection States */
+        .skin-card.selected { border-color: var(--accent-1); box-shadow: 0 0 15px rgba(0,210,255,0.4); }
+        .skin-card.selected::after {
+            content: '✓'; position: absolute; top: 10px; right: 10px;
+            background: var(--accent-1); color: black; font-weight: bold;
+            width: 24px; height: 24px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            z-index: 2;
+        }
+
+        /* Owned States */
+        .skin-card.owned::before {
+            content: 'DETECTED'; position: absolute; top: 10px; left: 10px;
+            background: var(--starlight); color: black; font-size: 0.6rem; font-weight: bold;
+            padding: 2px 6px; border-radius: 4px; z-index: 2;
+        }
+
+        /* Rarity Colors Mapping */
+        .Legend { color: var(--legend); border-color: var(--legend); }
+        .Collector { color: var(--collector); border-color: var(--collector); }
+        .Zenith { color: var(--zenith); border-color: var(--zenith); }
+        .Epic { color: var(--epic); border-color: var(--epic); }
+        .Special { color: var(--special); border-color: var(--special); }
+        .Elite { color: var(--elite); border-color: var(--elite); }
+        .Starlight { color: var(--starlight); border-color: var(--starlight); }
+
+        /* --- SCREEN 3: COLLAGE BUILDER --- */
+        .collage-layout { display: flex; flex-direction: column; gap: 20px; }
+        @media (min-width: 768px) { .collage-layout { flex-direction: row; } }
+        
+        .controls-panel { flex: 1; display: flex; flex-direction: column; gap: 15px; }
+        .canvas-panel { flex: 2; display: flex; justify-content: center; align-items: flex-start; overflow-x: auto; }
+        
+        .control-group { margin-bottom: 10px; }
+        .control-group label { display: block; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 5px; }
+        
+        #collage-wrapper {
+            background: #000;
+            padding: 20px;
+            position: relative;
+            min-width: 300px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+        }
+
+        #collage-grid {
+            display: grid;
+            gap: 5px;
+            transition: 0.3s;
+        }
+
+        .collage-item { width: 100%; aspect-ratio: 1/1; overflow: hidden; cursor: grab; position: relative; }
+        .collage-item img { width: 100%; height: 100%; object-fit: cover; pointer-events: none; }
+        
+        .remove-btn {
+            position: absolute; top: 5px; right: 5px; background: red; color: white;
+            width: 20px; height: 20px; border-radius: 50%; font-size: 12px;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; opacity: 0; transition: 0.2s; border: none;
+        }
+        .collage-item:hover .remove-btn { opacity: 1; }
+
+        .collage-text-overlay {
+            position: absolute;
+            bottom: 20px; left: 0; width: 100%;
+            text-align: center;
+            font-family: 'Orbitron', sans-serif;
+            color: white;
+            text-transform: uppercase;
+            text-shadow: 0 4px 8px rgba(0,0,0,0.8);
+            pointer-events: none;
+        }
+
+        #status-msg { text-align: center; padding: 20px; color: var(--text-muted); }
     </style>
 </head>
-<body x-data="app()" x-init="initData()">
+<body>
 
-    <!-- --- HEADER --- -->
-    <header class="sticky top-0 z-50 glass-panel px-4 py-3 flex justify-between items-center">
-        <div class="flex items-center gap-2">
-            <div class="w-8 h-8 bg-gradient-to-tr from-cyan-500 to-purple-600 rounded-lg flex items-center justify-center">
-                <i data-lucide="layers" class="w-5 h-5 text-white"></i>
-            </div>
-            <h1 class="font-orbitron text-lg font-bold tracking-tighter">MLBB<span class="text-cyan-400">COLLAGE</span></h1>
-        </div>
-        <div class="flex gap-3">
-            <button @click="step = 'upload'" class="p-2 hover:bg-white/10 rounded-full transition">
-                <i data-lucide="upload" class="w-5 h-5"></i>
-            </button>
-            <button class="p-2 hover:bg-white/10 rounded-full transition">
-                <i data-lucide="settings" class="w-5 h-5"></i>
-            </button>
+    <header>
+        <h1>MLBB Collage Pro</h1>
+        <div class="nav-tabs">
+            <div class="tab active" onclick="navTo('upload')">1. Scan Account</div>
+            <div class="tab" onclick="navTo('library')">2. Skin Library</div>
+            <div class="tab" onclick="navTo('collage')">3. Build Collage</div>
         </div>
     </header>
 
-    <main class="pb-32 max-w-6xl mx-auto px-4 pt-6">
-
-        <!-- --- STEP 1: UPLOAD & SCAN --- -->
-        <template x-if="step === 'upload'">
-            <div class="space-y-6 animate-in fade-in duration-500">
-                <div class="text-center space-y-2">
-                    <h2 class="text-2xl font-bold">Account Screenshot</h2>
-                    <p class="text-slate-400 text-sm">Upload your skin gallery to auto-detect owned skins</p>
-                </div>
-
-                <div 
-                    @dragover.prevent="isDragging = true" 
-                    @dragleave.prevent="isDragging = false"
-                    @drop.prevent="handleDrop($event)"
-                    :class="isDragging ? 'border-cyan-500 bg-cyan-500/5' : 'border-slate-700'"
-                    class="border-2 border-dashed rounded-2xl p-10 text-center transition-all cursor-pointer relative overflow-hidden"
-                >
-                    <input type="file" @change="handleUpload($event)" class="absolute inset-0 opacity-0 cursor-pointer">
-                    <div x-show="!isScanning">
-                        <i data-lucide="image-plus" class="w-12 h-12 mx-auto mb-4 text-slate-500"></i>
-                        <p class="font-medium">Tap to upload or drag & drop</p>
-                        <p class="text-xs text-slate-500 mt-1">Supports PNG, JPG, WEBP</p>
-                    </div>
-
-                    <!-- Scanning Animation -->
-                    <div x-show="isScanning" class="space-y-4">
-                        <div class="relative w-20 h-20 mx-auto">
-                            <div class="absolute inset-0 border-4 border-cyan-500/20 rounded-full"></div>
-                            <div class="absolute inset-0 border-4 border-t-cyan-500 rounded-full animate-spin"></div>
-                        </div>
-                        <div class="space-y-1">
-                            <p class="text-cyan-400 font-bold animate-pulse" x-text="scanStatus"></p>
-                            <p class="text-xs text-slate-500 italic">Matching against local database...</p>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="flex justify-center">
-                    <button @click="step = 'library'" class="text-slate-400 text-sm underline">Skip to manual selection</button>
-                </div>
-            </div>
-        </template>
-
-        <!-- --- STEP 2: LIBRARY --- -->
-        <template x-if="step === 'library'">
-            <div class="space-y-6">
-                <!-- Search & Filters -->
-                <div class="sticky top-16 z-40 bg-ml-bg py-2 space-y-4">
-                    <div class="relative">
-                        <i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400"></i>
-                        <input 
-                            type="text" 
-                            x-model="searchQuery"
-                            placeholder="Search hero, skin, or tag..." 
-                            class="w-full bg-slate-900 border border-slate-700 rounded-xl py-3 pl-10 pr-4 focus:ring-2 focus:ring-cyan-500 outline-none"
-                        >
-                    </div>
-                    
-                    <!-- Quick Filters -->
-                    <div class="flex gap-2 overflow-x-auto pb-2 no-scrollbar">
-                        <template x-for="filter in filters" :key="filter">
-                            <button 
-                                @click="toggleFilter(filter)"
-                                :class="activeFilters.includes(filter) ? 'bg-cyan-500 text-black border-cyan-500' : 'bg-slate-800 border-slate-700 text-slate-300'"
-                                class="px-4 py-1.5 rounded-full text-xs font-bold border transition-colors whitespace-nowrap"
-                                x-text="filter"
-                            ></button>
-                        </template>
-                    </div>
-                </div>
-
-                <!-- Hero Sections -->
-                <div class="space-y-8">
-                    <template x-for="(skins, hero) in groupedSkins" :key="hero">
-                        <div x-show="skins.some(s => s.visible)">
-                            <h3 class="font-orbitron text-sm font-bold text-slate-400 mb-4 flex items-center gap-2">
-                                <span x-text="hero"></span>
-                                <span class="h-[1px] flex-1 bg-slate-800"></span>
-                            </h3>
-                            <div class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-3">
-                                <template x-for="skin in skins" :key="skin.id">
-                                    <div 
-                                        x-show="skin.visible"
-                                        @click="toggleSkin(skin)"
-                                        :class="skin.selected ? 'ring-2 ring-cyan-500 scale-95' : 'opacity-80'"
-                                        class="relative aspect-[3/4] rounded-lg overflow-hidden bg-slate-800 cursor-pointer transition-all group"
-                                    >
-                                        <img :src="skin.url" class="w-full h-full object-cover" loading="lazy">
-                                        
-                                        <!-- Overlay info -->
-                                        <div class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/90 p-1.5">
-                                            <p class="text-[10px] font-bold leading-tight truncate" x-text="skin.name"></p>
-                                            <div class="flex justify-between items-center mt-1">
-                                                <span :class="'rarity-' + skin.rarity.toLowerCase()" class="text-[8px] uppercase font-bold" x-text="skin.rarity"></span>
-                                                <template x-if="skin.owned">
-                                                    <i data-lucide="check-circle-2" class="w-3 h-3 text-green-400"></i>
-                                                </template>
-                                            </div>
-                                        </div>
-
-                                        <!-- Selection Indicator -->
-                                        <div x-show="skin.selected" class="absolute top-1 right-1 bg-cyan-500 rounded-full p-0.5">
-                                            <i data-lucide="check" class="w-3 h-3 text-black"></i>
-                                        </div>
-                                    </div>
-                                </template>
-                            </div>
-                        </div>
-                    </template>
-                </div>
-            </div>
-        </template>
-
-        <!-- --- STEP 3: COLLAGE EDITOR --- -->
-        <template x-if="step === 'editor'">
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 animate-in slide-in-from-right duration-500">
+    <div class="container">
+        
+        <!-- SCREEN 1: UPLOAD & SCAN -->
+        <div id="screen-upload" class="screen active">
+            <div class="glass" style="padding: 20px;">
+                <h2 style="margin-bottom: 15px; font-family: 'Orbitron';">Smart Roster Scanner</h2>
+                <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 20px;">
+                    Upload a screenshot of your hero roster (e.g., <strong>IMG-20260812-WA0032.jpg</strong>). The scanner will detect visible skins and mark them in your library.
+                </p>
                 
-                <!-- Settings Panel (Left) -->
-                <div class="space-y-6 order-2 lg:order-1">
-                    <div class="glass-panel rounded-2xl p-6 space-y-6">
-                        <h3 class="font-orbitron font-bold text-cyan-400">Layout Settings</h3>
-                        
-                        <!-- Grid Controls -->
-                        <div class="space-y-4">
-                            <div>
-                                <label class="text-xs text-slate-400 block mb-2">Columns</label>
-                                <input type="range" x-model="editor.cols" min="2" max="8" class="w-full accent-cyan-500">
-                                <div class="flex justify-between text-[10px] mt-1"><span>2</span><span x-text="editor.cols"></span><span>8</span></div>
-                            </div>
-                            <div>
-                                <label class="text-xs text-slate-400 block mb-2">Spacing</label>
-                                <input type="range" x-model="editor.gap" min="0" max="40" class="w-full accent-cyan-500">
-                            </div>
-                            <div>
-                                <label class="text-xs text-slate-400 block mb-2">Border Radius</label>
-                                <input type="range" x-model="editor.rounded" min="0" max="30" class="w-full accent-cyan-500">
-                            </div>
-                        </div>
-
-                        <hr class="border-slate-800">
-
-                        <h3 class="font-orbitron font-bold text-cyan-400">Appearance</h3>
-                        <div class="grid grid-cols-2 gap-3">
-                            <button @click="editor.showText = !editor.showText" :class="editor.showText ? 'bg-cyan-500 text-black' : 'bg-slate-800'" class="py-2 rounded-lg text-xs font-bold transition">Names</button>
-                            <button @click="editor.showRarity = !editor.showRarity" :class="editor.showRarity ? 'bg-cyan-500 text-black' : 'bg-slate-800'" class="py-2 rounded-lg text-xs font-bold transition">Rarity Badge</button>
-                        </div>
-                        
-                        <div class="space-y-2">
-                            <label class="text-xs text-slate-400 block">Background Color</label>
-                            <input type="color" x-model="editor.bgColor" class="w-full h-10 bg-transparent border-none">
-                        </div>
+                <input type="file" id="file-upload" accept="image/*" style="display: none;">
+                <div class="upload-area" onclick="document.getElementById('file-upload').click()">
+                    <div class="upload-icon">📸</div>
+                    <h3>Tap or Drop Screenshot Here</h3>
+                    <p style="color: var(--text-muted); font-size: 0.8rem; margin-top: 10px;">JPG, PNG, WEBP</p>
+                </div>
+                
+                <img id="preview-img" alt="Preview">
+                
+                <div class="scan-loader" id="scan-loader">
+                    Scanning pixels... Identifying metadata... <br><br>
+                    <div style="width: 100%; height: 4px; background: #222; border-radius: 2px; overflow: hidden;">
+                        <div style="width: 50%; height: 100%; background: var(--accent-1); animation: loading 2s infinite ease-in-out;"></div>
                     </div>
-
-                    <button @click="exportCollage" class="w-full bg-gradient-to-r from-cyan-500 to-blue-600 text-black font-bold py-4 rounded-2xl shadow-lg shadow-cyan-500/20 flex items-center justify-center gap-2">
-                        <i data-lucide="download" class="w-5 h-5"></i>
-                        EXPORT HIGH QUALITY
-                    </button>
                 </div>
 
-                <!-- Canvas Preview (Right) -->
-                <div class="lg:col-span-2 order-1 lg:order-2">
-                    <div id="collage-canvas" 
-                        :style="{ 
-                            backgroundColor: editor.bgColor,
-                            padding: editor.gap + 'px',
-                            display: 'grid',
-                            gridTemplateColumns: `repeat(${editor.cols}, 1fr)`,
-                            gap: editor.gap + 'px'
-                        }"
-                        class="rounded-lg overflow-hidden shadow-2xl"
-                    >
-                        <template x-for="skin in selectedSkins" :key="skin.id">
-                            <div class="relative group aspect-[3/4]" :style="{ borderRadius: editor.rounded + 'px', overflow: 'hidden' }">
-                                <img :src="skin.url" class="w-full h-full object-cover">
-                                
-                                <div x-show="editor.showText" class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black p-2">
-                                    <p class="text-[10px] font-bold truncate text-white" x-text="skin.hero"></p>
-                                    <p class="text-[8px] opacity-80 truncate text-white" x-text="skin.name"></p>
-                                </div>
-
-                                <div x-show="editor.showRarity" class="absolute top-2 left-2">
-                                    <span :class="'rarity-' + skin.rarity.toLowerCase()" class="text-[7px] px-1 bg-black/50 rounded border border-white/20 uppercase font-bold" x-text="skin.rarity"></span>
-                                </div>
-                            </div>
-                        </template>
-                    </div>
-                    <p class="text-center text-slate-500 text-xs mt-4">Long press to drag and reorder (Desktop Only)</p>
-                </div>
-            </div>
-        </template>
-
-    </main>
-
-    <!-- --- SELECTION BAR (Sticky Bottom) --- -->
-    <div x-show="selectedSkins.length > 0 && step === 'library'" 
-        class="fixed bottom-20 left-4 right-4 z-50 glass-panel p-4 rounded-2xl flex items-center justify-between shadow-2xl border-cyan-500/30 animate-in slide-in-from-bottom duration-300"
-    >
-        <div class="flex items-center gap-4">
-            <div class="bg-cyan-500 text-black w-10 h-10 rounded-full flex items-center justify-center font-bold" x-text="selectedSkins.length"></div>
-            <div>
-                <p class="font-bold text-sm">Skins Selected</p>
-                <button @click="clearSelection" class="text-xs text-red-400 hover:underline">Clear All</button>
+                <button class="btn" id="btn-scan" style="width: 100%; display: none;" onclick="simulateScan()">Scan Screenshot</button>
+                <div id="scan-result" style="text-align: center; margin-top: 15px; color: var(--starlight); font-weight: bold; display: none;"></div>
             </div>
         </div>
-        <button @click="step = 'editor'" class="bg-white text-black px-6 py-2 rounded-xl font-bold text-sm flex items-center gap-2">
-            Create Collage <i data-lucide="chevron-right" class="w-4 h-4"></i>
-        </button>
+
+        <!-- SCREEN 2: LIBRARY -->
+        <div id="screen-library" class="screen">
+            <input type="text" id="search-input" class="search-bar glass" placeholder="Search hero, skin, tag, or rarity..." onkeyup="filterSkins()">
+            
+            <div class="selection-bar glass">
+                <span id="select-counter">0 Skins Selected</span>
+                <div style="display: flex; gap: 10px;">
+                    <button class="btn btn-outline btn-sm" onclick="clearSelection()">Clear</button>
+                    <button class="btn btn-sm" onclick="navTo('collage')">Create Collage ➔</button>
+                </div>
+            </div>
+
+            <div id="status-msg">Connecting to database...</div>
+            <div id="library-container"></div>
+        </div>
+
+        <!-- SCREEN 3: COLLAGE EDITOR -->
+        <div id="screen-collage" class="screen">
+            <div class="collage-layout">
+                
+                <!-- Controls Sidebar -->
+                <div class="controls-panel glass" style="padding: 20px;">
+                    <h3 style="font-family: 'Orbitron'; margin-bottom: 15px;">Layout Settings</h3>
+                    
+                    <div class="control-group">
+                        <label>Columns</label>
+                        <select id="ctrl-columns" onchange="updateCollage()">
+                            <option value="2">2 Columns</option>
+                            <option value="3">3 Columns</option>
+                            <option value="4" selected>4 Columns</option>
+                            <option value="5">5 Columns</option>
+                            <option value="6">6 Columns</option>
+                        </select>
+                    </div>
+
+                    <div class="control-group">
+                        <label>Grid Spacing (px)</label>
+                        <input type="range" id="ctrl-gap" min="0" max="20" value="5" oninput="updateCollage()">
+                    </div>
+
+                    <div class="control-group">
+                        <label>Background Color</label>
+                        <input type="color" id="ctrl-bg" value="#000000" oninput="updateCollage()">
+                    </div>
+
+                    <h3 style="font-family: 'Orbitron'; margin: 20px 0 15px;">Overlay Text</h3>
+                    
+                    <div class="control-group">
+                        <label>Main Title</label>
+                        <input type="text" id="ctrl-title" value="Kaguya Store & Rynn Official" oninput="updateCollage()">
+                    </div>
+                    
+                    <div class="control-group">
+                        <label>Subtitle / Event</label>
+                        <input type="text" id="ctrl-subtitle" value="TANI CUP SHOWCASE" oninput="updateCollage()">
+                    </div>
+
+                    <button class="btn" style="margin-top: 20px;" onclick="exportCollage()">Export High-Q Image</button>
+                </div>
+
+                <!-- Canvas Area -->
+                <div class="canvas-panel">
+                    <div id="collage-wrapper">
+                        <div id="collage-grid"></div>
+                        <div class="collage-text-overlay">
+                            <h2 id="render-title" style="letter-spacing: 2px;">Kaguya Store & Rynn Official</h2>
+                            <p id="render-subtitle" style="font-size: 0.9rem; opacity: 0.8; font-family: 'Poppins';">TANI CUP SHOWCASE</p>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
     </div>
 
-    <!-- --- NAVIGATION --- -->
-    <nav class="fixed bottom-0 inset-x-0 glass-panel border-t border-white/10 px-6 py-3 z-50 flex justify-around">
-        <button @click="step = 'upload'" :class="step === 'upload' ? 'text-cyan-400' : 'text-slate-500'" class="flex flex-col items-center gap-1">
-            <i data-lucide="scan" class="w-6 h-6"></i>
-            <span class="text-[10px] font-bold">SCANNER</span>
-        </button>
-        <button @click="step = 'library'" :class="step === 'library' ? 'text-cyan-400' : 'text-slate-500'" class="flex flex-col items-center gap-1">
-            <i data-lucide="library" class="w-6 h-6"></i>
-            <span class="text-[10px] font-bold">LIBRARY</span>
-        </button>
-        <button @click="step = 'editor'" :class="step === 'editor' ? 'text-cyan-400' : 'text-slate-500'" class="flex flex-col items-center gap-1">
-            <i data-lucide="layout" class="w-6 h-6"></i>
-            <span class="text-[10px] font-bold">EDITOR</span>
-        </button>
-    </nav>
-
     <script>
-        function app() {
-            return {
-                step: 'library', // Default step
-                username: "alongbots",
-                repo: "Collage",
-                folder: "images",
+        // --- STATE MANAGEMENT ---
+        let skinDatabase = [];
+        let selectedSkins = new Set();
+        let ownedSkins = new Set();
+        let currentGroupedSkins = {};
+
+        // GitHub Config
+        const username = "alongbots";
+        const repo = "Collage";
+        const folder = "images";
+
+        // --- INIT & FETCH ---
+        async function loadSkinDatabase() {
+            const status = document.getElementById('status-msg');
+            try {
+                const url = `https://api.github.com/repos/${username}/${repo}/contents/${folder}`;
+                const response = await fetch(url);
+                if (!response.ok) throw new Error("Could not access repository.");
                 
-                skins: [],
-                searchQuery: '',
-                activeFilters: [],
-                isDragging: false,
-                isScanning: false,
-                scanStatus: '',
+                const files = await response.json();
                 
-                editor: {
-                    cols: 4,
-                    gap: 8,
-                    rounded: 8,
-                    bgColor: '#05070a',
-                    showText: true,
-                    showRarity: true
-                },
-
-                filters: ['Legend', 'Collector', 'Epic', 'Special', 'Elite', 'Starlight', 'KOF', 'Aspirants', 'Zodiac'],
-
-                async initData() {
-                    lucide.createIcons();
-                    await this.loadSkins();
-                },
-
-                async loadSkins() {
-                    try {
-                        const url = `https://api.github.com/repos/${this.username}/${this.repo}/contents/${this.folder}`;
-                        const response = await fetch(url);
-                        if (!response.ok) throw new Error("Repo Error");
-                        const files = await response.json();
+                files.forEach(file => {
+                    if (file.name.match(/\.(jpg|jpeg|png|webp|gif)$/i)) {
+                        // Parse filename: Legend_Gusion.jpg or Normal_HeroName_SkinName.jpg
+                        const parts = file.name.split('_');
+                        const tag = parts[0] || "Basic";
+                        let hero = parts[1] ? parts[1].split('.')[0].replace(/-/g, ' ') : "Unknown Hero";
                         
-                        this.skins = files
-                            .filter(f => f.name.match(/\.(jpg|jpeg|png|webp)$/i))
-                            .map((file, index) => {
-                                // SMART PARSING: Hero_SkinName_Rarity_Tag.jpg
-                                const parts = file.name.split('.')[0].split('_');
-                                return {
-                                    id: index,
-                                    url: file.download_url,
-                                    hero: parts[0] || 'Hero',
-                                    name: (parts[1] || 'Default').replace(/-/g, ' '),
-                                    rarity: parts[2] || 'Normal',
-                                    tags: parts.slice(3) || [],
-                                    selected: false,
-                                    owned: false,
-                                    visible: true
-                                };
-                            });
-                    } catch (e) {
-                        console.error("Failed to load skins", e);
-                    }
-                },
-
-                get groupedSkins() {
-                    const filtered = this.skins.map(skin => {
-                        const query = this.searchQuery.toLowerCase();
-                        const matchesSearch = !query || 
-                                            skin.hero.toLowerCase().includes(query) || 
-                                            skin.name.toLowerCase().includes(query) ||
-                                            skin.rarity.toLowerCase().includes(query);
-                        
-                        const matchesFilter = this.activeFilters.length === 0 || 
-                                            this.activeFilters.some(f => 
-                                                skin.rarity.includes(f) || skin.tags.includes(f)
-                                            );
-
-                        skin.visible = matchesSearch && matchesFilter;
-                        return skin;
-                    });
-
-                    return filtered.reduce((acc, skin) => {
-                        if (!acc[skin.hero]) acc[skin.hero] = [];
-                        acc[skin.hero].push(skin);
-                        return acc;
-                    }, {});
-                },
-
-                get selectedSkins() {
-                    return this.skins.filter(s => s.selected);
-                },
-
-                toggleSkin(skin) {
-                    skin.selected = !skin.selected;
-                    setTimeout(() => lucide.createIcons(), 10);
-                },
-
-                toggleFilter(filter) {
-                    if (this.activeFilters.includes(filter)) {
-                        this.activeFilters = this.activeFilters.filter(f => f !== filter);
-                    } else {
-                        this.activeFilters.push(filter);
-                    }
-                },
-
-                clearSelection() {
-                    this.skins.forEach(s => s.selected = false);
-                },
-
-                handleUpload(e) {
-                    const file = e.target.files[0];
-                    if (file) this.simulateScan();
-                },
-
-                handleDrop(e) {
-                    this.isDragging = false;
-                    this.simulateScan();
-                },
-
-                simulateScan() {
-                    this.isScanning = true;
-                    const steps = ["Analyzing pixels...", "Identifying portraits...", "Matching Rarity...", "Finalizing results..."];
-                    let i = 0;
-                    
-                    const interval = setInterval(() => {
-                        this.scanStatus = steps[i];
-                        i++;
-                        if (i >= steps.length) {
-                            clearInterval(interval);
-                            this.isScanning = false;
-                            this.autoSelectOwned();
-                            this.step = 'library';
-                        }
-                    }, 800);
-                },
-
-                autoSelectOwned() {
-                    // Logic: Simulate that we found 5 random skins from the database
-                    const randomSkins = [...this.skins].sort(() => 0.5 - Math.random()).slice(0, 12);
-                    randomSkins.forEach(s => {
-                        s.owned = true;
-                        s.selected = true;
-                    });
-                    alert(`Found ${randomSkins.length} skins from your screenshot!`);
-                },
-
-                exportCollage() {
-                    const node = document.getElementById('collage-canvas');
-                    const btn = event.currentTarget;
-                    const originalText = btn.innerHTML;
-                    btn.innerText = "Processing...";
-                    
-                    htmlToImage.toPng(node, { quality: 1, pixelRatio: 3 })
-                        .then((dataUrl) => {
-                            const link = document.createElement('a');
-                            link.download = `mlbb-collage-${Date.now()}.png`;
-                            link.href = dataUrl;
-                            link.click();
-                            btn.innerHTML = originalText;
-                            lucide.createIcons();
-                        })
-                        .catch((error) => {
-                            console.error('Export failed', error);
-                            btn.innerHTML = originalText;
+                        skinDatabase.push({
+                            id: file.name,
+                            url: file.download_url,
+                            hero: hero,
+                            tag: tag,
+                            searchString: `${hero} ${tag}`.toLowerCase()
                         });
-                }
-            };
+                    }
+                });
+                
+                status.style.display = 'none';
+                renderLibrary(skinDatabase);
+            } catch (err) {
+                status.innerHTML = "Error loading skins. Make sure you are online.";
+                console.error(err);
+            }
         }
+
+        // --- NAVIGATION ---
+        function navTo(screenId) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            
+            document.getElementById(`screen-${screenId}`).classList.add('active');
+            event.target.classList.add('active');
+
+            if (screenId === 'collage') renderCollageEditor();
+        }
+
+        // --- UPLOAD & SCAN SIMULATION ---
+        document.getElementById('file-upload').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const img = document.getElementById('preview-img');
+                    img.src = e.target.result;
+                    img.style.display = 'block';
+                    document.getElementById('btn-scan').style.display = 'flex';
+                    document.getElementById('scan-result').style.display = 'none';
+                }
+                reader.readAsDataURL(file);
+            }
+        });
+
+        function simulateScan() {
+            document.getElementById('btn-scan').style.display = 'none';
+            document.getElementById('scan-loader').style.display = 'block';
+            
+            // Simulate processing time
+            setTimeout(() => {
+                document.getElementById('scan-loader').style.display = 'none';
+                
+                // Randomly assign 10-25 skins as "Owned/Detected" to simulate image recognition
+                ownedSkins.clear();
+                let detectCount = Math.floor(Math.random() * 15) + 10;
+                let shuffled = [...skinDatabase].sort(() => 0.5 - Math.random());
+                for(let i=0; i<Math.min(detectCount, shuffled.length); i++) {
+                    ownedSkins.add(shuffled[i].id);
+                }
+
+                const result = document.getElementById('scan-result');
+                result.innerHTML = `✓ Detected ${ownedSkins.size} skins successfully.<br><button class="btn btn-sm" style="margin-top:10px;" onclick="navTo('library')">Review Library</button>`;
+                result.style.display = 'block';
+                
+                // Re-render library to show detection tags
+                filterSkins();
+            }, 2500);
+        }
+
+        // --- LIBRARY RENDERING & FILTERING ---
+        function renderLibrary(skins) {
+            const container = document.getElementById('library-container');
+            container.innerHTML = '';
+            currentGroupedSkins = {};
+
+            const priority = ['Legend', 'Collector', 'Zenith', 'Epic', 'Special', 'Elite', 'Starlight', 'Basic'];
+
+            // Grouping
+            skins.forEach(skin => {
+                if (!currentGroupedSkins[skin.tag]) currentGroupedSkins[skin.tag] = [];
+                currentGroupedSkins[skin.tag].push(skin);
+            });
+
+            // Sorting Categories
+            const sortedTags = Object.keys(currentGroupedSkins).sort((a, b) => {
+                let idxA = priority.indexOf(a); let idxB = priority.indexOf(b);
+                return (idxA === -1 ? 99 : idxA) - (idxB === -1 ? 99 : idxB);
+            });
+
+            sortedTags.forEach(tag => {
+                const section = document.createElement('div');
+                section.className = 'category-row';
+                
+                let gridHtml = '';
+                currentGroupedSkins[tag].forEach(item => {
+                    const isSelected = selectedSkins.has(item.id) ? 'selected' : '';
+                    const isOwned = ownedSkins.has(item.id) ? 'owned' : '';
+                    gridHtml += `
+                        <div class="skin-card ${isSelected} ${isOwned}" id="card-${item.id.replace(/\./g, '-')}" onclick="toggleSkin('${item.id}')">
+                            <div class="img-box">
+                                <img src="${item.url}" loading="lazy" alt="${item.hero}">
+                            </div>
+                            <div class="skin-info">
+                                <span class="hero-name">${item.hero}</span>
+                                <span class="tag-badge ${tag}">${item.tag}</span>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                section.innerHTML = `
+                    <div class="row-title ${tag}">${tag} Skins <span style="font-size: 0.8rem; opacity:0.6;">(${currentGroupedSkins[tag].length})</span></div>
+                    <div class="skin-grid">${gridHtml}</div>
+                `;
+                container.appendChild(section);
+            });
+        }
+
+        function filterSkins() {
+            const query = document.getElementById('search-input').value.toLowerCase();
+            if (!query) {
+                renderLibrary(skinDatabase);
+                return;
+            }
+            const filtered = skinDatabase.filter(skin => skin.searchString.includes(query));
+            renderLibrary(filtered);
+        }
+
+        // --- SKIN SELECTION ---
+        function toggleSkin(id) {
+            const safeId = `card-${id.replace(/\./g, '-')}`;
+            const card = document.getElementById(safeId);
+            
+            if (selectedSkins.has(id)) {
+                selectedSkins.delete(id);
+                if(card) card.classList.remove('selected');
+            } else {
+                selectedSkins.add(id);
+                if(card) card.classList.add('selected');
+            }
+            updateCounter();
+        }
+
+        function clearSelection() {
+            selectedSkins.clear();
+            document.querySelectorAll('.skin-card').forEach(c => c.classList.remove('selected'));
+            updateCounter();
+            if(document.getElementById('screen-collage').classList.contains('active')) renderCollageEditor();
+        }
+
+        function updateCounter() {
+            document.getElementById('select-counter').innerText = `${selectedSkins.size} Skins Selected`;
+        }
+
+        // --- COLLAGE BUILDER ---
+        function renderCollageEditor() {
+            const grid = document.getElementById('collage-grid');
+            grid.innerHTML = '';
+            
+            if (selectedSkins.size === 0) {
+                grid.innerHTML = '<div style="color:var(--text-muted); padding: 50px; text-align:center; width:100%;">No skins selected. Go back to Library.</div>';
+                return;
+            }
+
+            // Get full skin objects for selected IDs
+            const selectedData = skinDatabase.filter(s => selectedSkins.has(s.id));
+
+            selectedData.forEach(skin => {
+                const item = document.createElement('div');
+                item.className = 'collage-item';
+                item.setAttribute('data-id', skin.id);
+                item.innerHTML = `
+                    <img src="${skin.url}" crossorigin="anonymous">
+                    <button class="remove-btn" onclick="removeFromCollage('${skin.id}')">✕</button>
+                `;
+                grid.appendChild(item);
+            });
+
+            updateCollage();
+
+            // Initialize Drag & Drop
+            new Sortable(grid, {
+                animation: 150,
+                ghostClass: 'sortable-ghost'
+            });
+        }
+
+        function removeFromCollage(id) {
+            selectedSkins.delete(id);
+            updateCounter();
+            renderCollageEditor();
+            
+            // Also unselect in library view
+            const safeId = `card-${id.replace(/\./g, '-')}`;
+            const card = document.getElementById(safeId);
+            if(card) card.classList.remove('selected');
+        }
+
+        function updateCollage() {
+            const grid = document.getElementById('collage-grid');
+            const wrapper = document.getElementById('collage-wrapper');
+            
+            const cols = document.getElementById('ctrl-columns').value;
+            const gap = document.getElementById('ctrl-gap').value;
+            const bg = document.getElementById('ctrl-bg').value;
+            
+            const title = document.getElementById('ctrl-title').value;
+            const subtitle = document.getElementById('ctrl-subtitle').value;
+
+            grid.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
+            grid.style.gap = `${gap}px`;
+            wrapper.style.backgroundColor = bg;
+            wrapper.style.padding = `${parseInt(gap) + 15}px`;
+
+            document.getElementById('render-title').innerText = title;
+            document.getElementById('render-subtitle').innerText = subtitle;
+        }
+
+        // --- EXPORT ---
+        function exportCollage() {
+            const wrapper = document.getElementById('collage-wrapper');
+            const btn = event.target;
+            const originalText = btn.innerText;
+            
+            // Hide remove buttons before export
+            document.querySelectorAll('.remove-btn').forEach(btn => btn.style.display = 'none');
+            btn.innerText = "Rendering...";
+            
+            html2canvas(wrapper, {
+                useCORS: true,
+                allowTaint: true,
+                scale: 3, // High-Q standard export
+                backgroundColor: null // Inherit from wrapper
+            }).then(canvas => {
+                const link = document.createElement('a');
+                link.download = `MLBB_Collage_${Date.now()}.png`;
+                link.href = canvas.toDataURL('image/png', 1.0);
+                link.click();
+                
+                // Restore buttons
+                document.querySelectorAll('.remove-btn').forEach(btn => btn.style.display = 'flex');
+                btn.innerText = originalText;
+            }).catch(err => {
+                console.error("Export failed:", err);
+                alert("Export failed. Check console for details.");
+                document.querySelectorAll('.remove-btn').forEach(btn => btn.style.display = 'flex');
+                btn.innerText = originalText;
+            });
+        }
+
+        // Boot
+        window.onload = loadSkinDatabase;
     </script>
 </body>
-    </html>
+</html>
