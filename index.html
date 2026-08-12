@@ -8,14 +8,13 @@
     <style>
         :root {
             --bg: #05070a;
-            --card-bg: #11141d;
+            --panel: #11141d;
             --legend: #ffcc00;
             --collector: #00f2ff;
             --epic: #d644ff;
             --special: #ff8c00;
             --elite: #2196f3;
             --starlight: #f48fb1;
-            --default: #ffffff;
         }
 
         body {
@@ -24,40 +23,33 @@
             font-family: 'Poppins', sans-serif;
             margin: 0;
             padding: 20px;
-            background-image: radial-gradient(circle at top right, #1a1a2e, transparent);
         }
 
         header {
             text-align: center;
-            padding: 30px 0;
-            border-bottom: 1px solid rgba(255,255,255,0.05);
-            margin-bottom: 30px;
+            padding: 40px 0;
         }
 
         h1 {
             font-family: 'Orbitron', sans-serif;
-            font-size: 2.2rem;
-            text-transform: uppercase;
+            font-size: 2.5rem;
             letter-spacing: 5px;
-            background: linear-gradient(to right, #00d2ff, #9d00ff);
+            background: linear-gradient(90deg, #00d2ff, #9d00ff);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            margin: 0;
+            text-transform: uppercase;
         }
 
-        .category-row {
-            margin-bottom: 50px;
-        }
+        .category-row { margin-bottom: 50px; }
 
         .row-title {
             font-family: 'Orbitron', sans-serif;
-            font-size: 1.3rem;
+            font-size: 1.4rem;
             margin-bottom: 20px;
             display: flex;
             align-items: center;
             gap: 15px;
             text-transform: uppercase;
-            letter-spacing: 2px;
         }
 
         .row-title::after {
@@ -65,46 +57,40 @@
             flex: 1;
             height: 2px;
             background: linear-gradient(90deg, currentColor, transparent);
-            opacity: 0.3;
+            opacity: 0.2;
         }
 
         .skin-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
             gap: 20px;
         }
 
         .skin-card {
-            background: var(--card-bg);
+            background: var(--panel);
             border-radius: 12px;
             overflow: hidden;
-            border: 1px solid rgba(255, 255, 255, 0.03);
-            transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             position: relative;
+            transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1px solid rgba(255,255,255,0.05);
         }
 
         .skin-card:hover {
             transform: translateY(-10px);
-            border-color: rgba(255, 255, 255, 0.2);
-            box-shadow: 0 10px 30px rgba(0,0,0,0.7);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.8);
+            border-color: rgba(255,255,255,0.2);
         }
 
-        .img-wrap {
+        .img-box {
             width: 100%;
-            height: 240px;
-            overflow: hidden;
+            height: 260px;
             background: #000;
         }
 
-        .img-wrap img {
+        .img-box img {
             width: 100%;
             height: 100%;
             object-fit: cover;
-            transition: 0.5s;
-        }
-
-        .skin-card:hover img {
-            transform: scale(1.1);
         }
 
         .skin-info {
@@ -114,25 +100,23 @@
             position: absolute;
             bottom: 0;
             width: 100%;
-            box-sizing: border-box;
         }
 
         .hero-name {
             display: block;
             font-weight: 600;
-            font-size: 0.85rem;
-            margin-bottom: 4px;
+            font-size: 0.9rem;
+            margin-bottom: 5px;
             text-shadow: 0 2px 4px black;
         }
 
-        .tag-label {
+        .tag-badge {
             font-size: 0.6rem;
-            font-weight: 800;
+            font-weight: bold;
             padding: 2px 8px;
-            border-radius: 3px;
+            border-radius: 4px;
             text-transform: uppercase;
             border: 1px solid;
-            background: rgba(0,0,0,0.5);
         }
 
         /* Color Coding */
@@ -142,69 +126,82 @@
         .Special { color: var(--special); }
         .Elite { color: var(--elite); }
         .Starlight { color: var(--starlight); }
-        .Normal { color: var(--default); }
     </style>
 </head>
 <body>
 
     <header>
-        <h1>Skin Inventory</h1>
+        <h1>Hero Skins</h1>
     </header>
 
     <div id="main-container"></div>
 
-    <!-- THIS LOADS YOUR DATA -->
-    <script src="skin.js"></script>
-
     <script>
-        const container = document.getElementById('main-container');
-        const groups = {};
+        async function fetchSkins() {
+            try {
+                // FETCH FROM THE "images" FILE
+                const response = await fetch('images');
+                const text = await response.text();
+                const lines = text.split(/\r?\n/); // Split by lines
 
-        // 1. Organize images from skin.js into groups
-        images.forEach(file => {
-            const parts = file.split('_');
-            const tag = parts[0] || "Normal";
-            let name = parts[1] ? parts[1].split('.')[0] : "Hero";
-            name = name.replace(/-/g, ' '); 
+                const groups = {};
 
-            if (!groups[tag]) groups[tag] = [];
-            groups[tag].push({ file, name, tag });
-        });
+                lines.forEach(line => {
+                    const file = line.trim();
+                    if (!file) return;
 
-        // 2. Define row order
-        const priority = ['Legend', 'Collector', 'Epic', 'Special', 'Elite', 'Starlight'];
-        const sortedTags = Object.keys(groups).sort((a, b) => {
-            let idxA = priority.indexOf(a);
-            let idxB = priority.indexOf(b);
-            return (idxA === -1 ? 99 : idxA) - (idxB === -1 ? 99 : idxB);
-        });
+                    const parts = file.split('_');
+                    const tag = parts[0] || "Normal";
+                    let name = parts[1] ? parts[1].split('.')[0] : "Hero";
+                    name = name.replace(/-/g, ' ');
 
-        // 3. Build the UI
-        sortedTags.forEach(tag => {
-            const section = document.createElement('div');
-            section.className = 'category-row';
+                    if (!groups[tag]) groups[tag] = [];
+                    groups[tag].push({ file, name, tag });
+                });
+
+                renderUI(groups);
+            } catch (err) {
+                console.error("Error fetching images file:", err);
+            }
+        }
+
+        function renderUI(groups) {
+            const container = document.getElementById('main-container');
+            const priority = ['Legend', 'Collector', 'Epic', 'Special', 'Elite', 'Starlight'];
             
-            section.innerHTML = `
-                <div class="row-title ${tag}">${tag} Skins</div>
-                <div class="skin-grid" id="grid-${tag}"></div>
-            `;
-            container.appendChild(section);
-
-            const grid = document.getElementById(`grid-${tag}`);
-            groups[tag].forEach(item => {
-                grid.innerHTML += `
-                    <div class="skin-card">
-                        <div class="img-wrap">
-                            <img src="images/${item.file}" alt="${item.name}" loading="lazy">
-                        </div>
-                        <div class="skin-info">
-                            <span class="hero-name">${item.name}</span>
-                            <span class="tag-label ${tag}">${item.tag}</span>
-                        </div>
-                    </div>
-                `;
+            const sortedTags = Object.keys(groups).sort((a, b) => {
+                let idxA = priority.indexOf(a);
+                let idxB = priority.indexOf(b);
+                return (idxA === -1 ? 99 : idxA) - (idxB === -1 ? 99 : idxB);
             });
-        });
+
+            sortedTags.forEach(tag => {
+                const section = document.createElement('div');
+                section.className = 'category-row';
+                section.innerHTML = `
+                    <div class="row-title ${tag}">${tag} Skins</div>
+                    <div class="skin-grid" id="grid-${tag}"></div>
+                `;
+                container.appendChild(section);
+
+                const grid = document.getElementById(`grid-${tag}`);
+                groups[tag].forEach(item => {
+                    grid.innerHTML += `
+                        <div class="skin-card">
+                            <div class="img-box">
+                                <img src="images/${item.file}" alt="${item.name}">
+                            </div>
+                            <div class="skin-info">
+                                <span class="hero-name">${item.name}</span>
+                                <span class="tag-badge ${tag}">${item.tag}</span>
+                            </div>
+                        </div>
+                    `;
+                });
+            });
+        }
+
+        fetchSkins();
     </script>
 </body>
 </html>
