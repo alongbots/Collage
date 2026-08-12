@@ -184,10 +184,11 @@
             align-items: center;
             gap: 15px;
             text-transform: uppercase;
+            color: var(--accent-1);
         }
         .row-title::after {
             content: ""; flex: 1; height: 1px;
-            background: linear-gradient(90deg, currentColor, transparent);
+            background: linear-gradient(90deg, var(--accent-1), transparent);
             opacity: 0.3;
         }
 
@@ -259,7 +260,7 @@
         
         #collage-wrapper {
             background: #000;
-            padding: 0px; /* Zero padding for seamless look */
+            padding: 0px; 
             position: relative;
             min-width: 300px;
             width: 100%;
@@ -271,18 +272,18 @@
 
         #profile-header-container {
             width: 100%;
-            display: none; /* Hidden until image is uploaded */
+            display: none; 
         }
         
         #profile-header-container img {
             width: 100%;
-            display: block; /* Removes bottom spacing bug on images */
+            display: block; 
             object-fit: cover;
         }
 
         #collage-grid {
             display: grid;
-            gap: 0px; /* Seamless gap */
+            gap: 0px; 
             transition: 0.3s;
             width: 100%;
         }
@@ -345,7 +346,7 @@
 
         <!-- SCREEN 2: LIBRARY -->
         <div id="screen-library" class="screen">
-            <input type="text" id="search-input" class="search-bar glass" placeholder="Search hero, skin, tag, or rarity..." onkeyup="filterSkins()">
+            <input type="text" id="search-input" class="search-bar glass" placeholder="Search by Hero name or Skin name (e.g. Gusion, Legend, Collector...)" onkeyup="filterSkins()">
             
             <div class="selection-bar glass">
                 <span id="select-counter">0 Skins Selected</span>
@@ -396,7 +397,6 @@
 
                 <!-- Canvas Area -->
                 <div class="canvas-panel">
-                    <!-- The exact layout requested: Top Image + Seamless Grid -->
                     <div id="collage-wrapper">
                         <div id="profile-header-container">
                             <img id="profile-header-img" src="" alt="Profile Header">
@@ -415,7 +415,6 @@
         let skinDatabase = [];
         let selectedSkins = new Set();
         let ownedSkins = new Set();
-        let currentGroupedSkins = {};
 
         // GitHub Config
         const username = "alongbots";
@@ -438,12 +437,16 @@
                         const tag = parts[0] || "Basic";
                         let hero = parts[1] ? parts[1].split('.')[0].replace(/-/g, ' ') : "Unknown Hero";
                         
+                        // Clean up hero name (handles cases like "Gusion-Soul" or extra parts)
+                        const heroBase = hero.split(' ')[0]; 
+
                         skinDatabase.push({
                             id: file.name,
                             url: file.download_url,
                             hero: hero,
                             tag: tag,
-                            searchString: `${hero} ${tag}`.toLowerCase()
+                            heroGroup: heroBase, // Key used for grouping Gusion skins together
+                            searchString: `${hero} ${tag} ${file.name}`.toLowerCase()
                         });
                     }
                 });
@@ -462,7 +465,11 @@
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
             
             document.getElementById(`screen-${screenId}`).classList.add('active');
-            event.target.classList.add('active');
+            // Find tab manually since event.target might be inner text
+            const tabs = document.querySelectorAll('.tab');
+            if(screenId === 'upload') tabs[0].classList.add('active');
+            if(screenId === 'library') tabs[1].classList.add('active');
+            if(screenId === 'collage') tabs[2].classList.add('active');
 
             if (screenId === 'collage') renderCollageEditor();
         }
@@ -505,30 +512,28 @@
             }, 2500);
         }
 
-        // --- LIBRARY RENDERING ---
+        // --- LIBRARY RENDERING (GROUPED BY HERO) ---
         function renderLibrary(skins) {
             const container = document.getElementById('library-container');
             container.innerHTML = '';
-            currentGroupedSkins = {};
-
-            const priority = ['Legend', 'Collector', 'Zenith', 'Epic', 'Special', 'Elite', 'Starlight', 'Basic'];
-
+            
+            // Grouping by Hero name
+            const heroGroups = {};
             skins.forEach(skin => {
-                if (!currentGroupedSkins[skin.tag]) currentGroupedSkins[skin.tag] = [];
-                currentGroupedSkins[skin.tag].push(skin);
+                if (!heroGroups[skin.heroGroup]) heroGroups[skin.heroGroup] = [];
+                heroGroups[skin.heroGroup].push(skin);
             });
 
-            const sortedTags = Object.keys(currentGroupedSkins).sort((a, b) => {
-                let idxA = priority.indexOf(a); let idxB = priority.indexOf(b);
-                return (idxA === -1 ? 99 : idxA) - (idxB === -1 ? 99 : idxB);
-            });
+            // Sort heroes alphabetically
+            const sortedHeroNames = Object.keys(heroGroups).sort();
 
-            sortedTags.forEach(tag => {
+            sortedHeroNames.forEach(heroName => {
                 const section = document.createElement('div');
                 section.className = 'category-row';
                 
                 let gridHtml = '';
-                currentGroupedSkins[tag].forEach(item => {
+                // Sort skins within the hero group by rarity priority if needed
+                heroGroups[heroName].forEach(item => {
                     const isSelected = selectedSkins.has(item.id) ? 'selected' : '';
                     const isOwned = ownedSkins.has(item.id) ? 'owned' : '';
                     gridHtml += `
@@ -538,14 +543,14 @@
                             </div>
                             <div class="skin-info">
                                 <span class="hero-name">${item.hero}</span>
-                                <span class="tag-badge ${tag}">${item.tag}</span>
+                                <span class="tag-badge ${item.tag}">${item.tag}</span>
                             </div>
                         </div>
                     `;
                 });
 
                 section.innerHTML = `
-                    <div class="row-title ${tag}">${tag} Skins <span style="font-size: 0.8rem; opacity:0.6;">(${currentGroupedSkins[tag].length})</span></div>
+                    <div class="row-title">${heroName} <span style="font-size: 0.8rem; opacity:0.6;">(${heroGroups[heroName].length})</span></div>
                     <div class="skin-grid">${gridHtml}</div>
                 `;
                 container.appendChild(section);
@@ -589,8 +594,6 @@
         }
 
         // --- COLLAGE BUILDER ---
-        
-        // Load the top profile banner image
         function loadHeaderImage(event) {
             const file = event.target.files[0];
             if (file) {
@@ -605,12 +608,11 @@
             }
         }
 
-        // Remove the top profile banner image
         function removeHeaderImage() {
             document.getElementById('profile-header-img').src = '';
             document.getElementById('profile-header-container').style.display = 'none';
             document.getElementById('remove-header-btn').style.display = 'none';
-            document.getElementById('header-upload').value = ""; // Reset input
+            document.getElementById('header-upload').value = ""; 
         }
 
         function renderCollageEditor() {
@@ -655,14 +657,9 @@
 
         function updateCollage() {
             const grid = document.getElementById('collage-grid');
-            
             const cols = document.getElementById('ctrl-columns').value;
             const gap = document.getElementById('ctrl-gap').value;
-            
-            // Update UI label for gap
             document.getElementById('gap-val').innerText = gap == 0 ? "0px (Seamless)" : gap + "px";
-
-            // Apply grid styles for the seamless look
             grid.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
             grid.style.gap = `${gap}px`;
         }
@@ -683,7 +680,7 @@
                 backgroundColor: "#000000"
             }).then(canvas => {
                 const link = document.createElement('a');
-                link.download = `Store_Showcase_${Date.now()}.png`;
+                link.download = `Showcase_${Date.now()}.png`;
                 link.href = canvas.toDataURL('image/png', 1.0);
                 link.click();
                 
@@ -691,13 +688,12 @@
                 btn.innerText = originalText;
             }).catch(err => {
                 console.error("Export failed:", err);
-                alert("Export failed. Check console for details.");
+                alert("Export failed.");
                 document.querySelectorAll('.remove-btn').forEach(btn => btn.style.display = 'flex');
                 btn.innerText = originalText;
             });
         }
 
-        // Boot
         window.onload = loadSkinDatabase;
     </script>
 </body>
