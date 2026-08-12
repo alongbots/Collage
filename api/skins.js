@@ -1,14 +1,7 @@
-// Scrapes https://mlbbautocollage.vercel.app and builds a JSON manifest:
-// [{ name, url, file }]  — name from <img alt>, url from <img src>.
+// Live-scrape fallback endpoint. Primary source is the static public/skins.json.
 
 const BASE = 'https://mlbbautocollage.vercel.app';
-const RAW = false; // set true once you deploy /skins/raw/ full-res images
-
-const decode = (s) =>
-  s.replace(/&amp;/g, '&').replace(/&quot;/g, '"').replace(/&#39;/g, "'");
-
-const sanitize = (name) =>
-  name.replace(/[\\/:*?"<>|]+/g, '_').replace(/\s+/g, ' ').trim();
+const TIMEOUT_MS = 8000;
 
 module.exports = async (req, res) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -17,11 +10,11 @@ module.exports = async (req, res) => {
   try {
     const html = await fetch(BASE, {
       headers: { 'User-Agent': 'mlbb-skins-downloader/1.0' },
+      signal: AbortSignal.timeout(TIMEOUT_MS),
     }).then((r) => r.text());
 
     const seen = new Set();
     const skins = [];
-
     for (const m of html.matchAll(/<img\b[^>]*>/gi)) {
       const tag = m[0];
       const alt = (tag.match(/alt="([^"]*)"/i) || [, ''])[1].trim();
@@ -30,36 +23,18 @@ module.exports = async (req, res) => {
       if (seen.has(src)) continue;
       seen.add(src);
 
-      let url = new URL(src, BASE).href;
-      if (RAW) {
-        url = url.replace('/skins/thumbs/', '/skins/raw/').replace(/\.webp$/, '');
-      }
-
-      const name = decode(alt) || decodeURIComponent(url.split('/').pop().replace(/\.(webp|jpe?g|png|gif)$/i, ''));
+      const url = new URL(src, BASE).href;
+      const name = alt || decodeURIComponent(url.split('/').pop().replace(/\.(webp|jpe?g|png|gif)$/i, ''));
       const ext = /\.(webp|jpe?g|png|gif)$/i.exec(url)?.[0] || '.jpg';
-      const file = sanitize(name) + ext;
-
+      const file = name.replace(/[\\/:*?"<>|]+/g, '_').replace(/\s+/g, ' ').trim() + ext;
       skins.push({ name, url, file });
     }
 
-    // guarantee unique filenames inside the zip
-    const seenFiles = new Map();
-    for (const s of skins) {
-      const n = seenFiles.get(s.file) || 0;
-      seenFiles.set(s.file, n + 1);
-      if (n > 0) {
-        const dot = s.file.lastIndexOf('.');
-        s.file = s.file.slice(0, dot) + ` (${n + 1})` + s.file.slice(dot);
-      }
-    }
-
-    res.status(200).json({
-      count: skins.length,
-      generatedAt: new Date().toISOString(),
-      source: BASE,
-      skins,
-    });
+    res.status(200).json({ count: skins.length, generatedAt: new Date().toISOString(), source: BASE, skins });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({
+      error: err.name === 'TimeoutError' ? 'Upstream fetch timed out (8s)' : err.message,
+      hint: 'Run scripts/build-manifest.js and commit public/skins.json for a static fallback.',
+    });
   }
 };
