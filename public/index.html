@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>MLBB Skin Downloader</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<style>
+  body { font-family: system-ui, sans-serif; margin: 0; background: #0f1117; color: #e6e8ef; }
+  .wrap { max-width: 900px; margin: 0 auto; padding: 24px; }
+  h1 { font-size: 22px; }
+  .bar { display: flex; gap: 10px; flex-wrap: wrap; margin: 14px 0; }
+  button { background: #2563eb; color: #fff; border: 0; border-radius: 8px; padding: 10px 16px; cursor: pointer; font-size: 14px; }
+  button:disabled { opacity: .5; cursor: wait; }
+  button.gray { background: #3b3f4a; }
+  #progress { height: 8px; background: #23262f; border-radius: 4px; overflow: hidden; margin: 12px 0; display: none; }
+  #progress > div { height: 100%; width: 0; background: #22c55e; transition: width .2s; }
+  #status { color: #9ca3af; font-size: 13px; }
+  input { width: 100%; padding: 8px 10px; border-radius: 8px; border: 1px solid #2c3038; background: #171a21; color: #e6e8ef; margin: 8px 0 14px; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th, td { text-align: left; padding: 6px 8px; border-bottom: 1px solid #23262f; }
+  th { position: sticky; top: 0; background: #0f1117; }
+  img { width: 40px; height: 40px; object-fit: cover; border-radius: 6px; display: block; }
+  a { color: #60a5fa; text-decoration: none; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>MLBB Skin Downloader</h1>
+  <div class="bar">
+    <button id="btnJson" class="gray">⬇ Download JSON</button>
+    <button id="btnZip" disabled>⬇ Download All as ZIP</button>
+    <button id="btnReload" class="gray">↻ Reload manifest</button>
+  </div>
+  <div id="progress"><div></div></div>
+  <div id="status">Loading skin manifest…</div>
+  <input id="search" type="search" placeholder="Filter skins…" />
+  <table>
+    <thead><tr><th></th><th>Name</th><th>Download</th></tr></thead>
+    <tbody id="rows"></tbody>
+  </table>
+</div>
+
+<script>
+const $ = (s) => document.querySelector(s);
+let SKINS = [];
+
+async function load() {
+  $('btnJson').disabled = $('btnZip').disabled = true;
+  $('status').textContent = 'Fetching /api/skins…';
+  try {
+    const r = await fetch('/api/skins');
+    const data = await r.json();
+    if (data.error) throw new Error(data.error);
+    SKINS = data.skins;
+    $('status').textContent = `${data.count} skins loaded from ${data.source}`;
+    render();
+    $('btnJson').disabled = $('btnZip').disabled = false;
+  } catch (e) {
+    $('status').textContent = 'Error: ' + e.message;
+  }
+}
+
+function render() {
+  const q = $('search').value.toLowerCase();
+  const rows = SKINS.filter((s) => s.name.toLowerCase().includes(q));
+  $('rows').innerHTML = rows.map((s) => `
+    <tr>
+      <td><img src="/api/image?url=${encodeURIComponent(s.url)}" loading="lazy" alt="" /></td>
+      <td>${s.name}</td>
+      <td><a href="/api/image?url=${encodeURIComponent(s.url)}" download="${s.file}">${s.file}</a></td>
+    </tr>`).join('');
+}
+
+$('search').addEventListener('input', render);
+
+$('btnJson').addEventListener('click', () => {
+  const blob = new Blob([JSON.stringify({ count: SKINS.length, skins: SKINS }, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'skins.json';
+  a.click();
+  URL.revokeObjectURL(a.href);
+});
+
+$('btnReload').addEventListener('click', load);
+
+// Download all with a small concurrency pool (4 parallel), progress bar
+$('btnZip').addEventListener('click', async () => {
+  const zip = new JSZip();
+  const bar = $('progress'), fill = bar.querySelector('div');
+  bar.style.display = 'block';
+  $('btnZip').disabled = true;
+
+  let done = 0, failed = 0;
+  const total = SKINS.length;
+  const update = () => {
+    fill.style.width = ((done + failed) / total * 100) + '%';
+    $('status').textContent = `${done + failed}/${total} downloaded${failed ? ` (${failed} failed)` : ''}`;
+  };
+
+  const pool = async (items, limit, fn) => {
+    const queue = [...items];
+    const workers = Array.from({ length: Math.min(limit, items.length) }, async () => {
+      while (queue.length) {
+        const item = queue.shift();
+        await fn(item);
+      }
+    });
+    await Promise.all(workers);
+  };
+
+  await pool(SKINS, 4, async (s) => {
+    try {
+      const r = await fetch('/api/image?url=' + encodeURIComponent(s.url));
+      const blob = await r.blob();
+      zip.file(s.file, blob);
+      done++;
+    } catch { failed++; }
+    update();
+  });
+
+  $('status').textContent = 'Zipping…';
+  const out = await zip.generateAsync({ type: 'blob' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(out);
+  a.download = 'mlbb-skins.zip';
+  a.click();
+  URL.revokeObjectURL(a.href);
+
+  $('status').textContent = `Done. ${done} saved, ${failed} failed.`;
+  $('btnZip').disabled = false;
+  setTimeout(() => (bar.style.display = 'none'), 800);
+});
+
+load();
+</script>
+</body>
+</html>
